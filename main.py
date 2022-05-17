@@ -82,7 +82,7 @@ def main():
 
             # Apply the sampled action in our environment
             state_next, reward, done, info = env.step(action)
-            env.render()
+            # env.render()
             state_next = np.array(state_next)
 
             episode_reward += reward
