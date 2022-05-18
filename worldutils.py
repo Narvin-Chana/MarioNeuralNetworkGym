@@ -9,6 +9,7 @@ ENEMIES_X_SCREEN = 0x87
 ENEMIES_Y_SCREEN = 0xCF
 
 MARIO_X = 0x0086
+MARIO_X_SCREEN_OFFSET = 0x03AD
 MARIO_Y = 0x00CE
 MARIO_CURRENT_SCREEN = 0x006D
 CURRENT_SCREEN = 0x071A
@@ -59,12 +60,11 @@ def get_mario_position(env):
     :param env: The ram environment (needs to contain a 'ram' variable or wrap an environment that does)
     :return: X and Y value of Mario's position on the screen (X: [0,256], Y: [0,240])
     """
-    x_pos = env.ram[MARIO_X] + env.ram[MARIO_CURRENT_SCREEN] * 256 - (env.ram[SCREEN_EDGE_X] + (env.ram[CURRENT_SCREEN] * 256))
+    x_pos = env.ram[MARIO_X] + env.ram[MARIO_CURRENT_SCREEN] * 256 - (
+            env.ram[SCREEN_EDGE_X] + (env.ram[CURRENT_SCREEN] * 256))
     y_pos = env.ram[MARIO_Y]
 
-    print(x_pos, y_pos)
     return x_pos, y_pos
-
 
 
 def read_blocks(env):
@@ -80,7 +80,8 @@ def read_blocks(env):
             if row < 2:
                 blockList[row, col] = BLOCK_TYPE_EMPTY
             else:
-                x, y = col * 16, row * 16
+                x_start = env.ram[MARIO_X] + env.ram[MARIO_CURRENT_SCREEN] * 256 - env.ram[MARIO_X_SCREEN_OFFSET]
+                x, y = col * 16 + x_start, row * 16
                 page = (x // 256) % 2
                 sub_x = (x % 256) // 16
                 sub_y = (y - 32) // 16
@@ -90,3 +91,48 @@ def read_blocks(env):
                 blockList[row, col] = BLOCK_TYPE_EMPTY if env.ram[addr] == BLOCK_TYPE_EMPTY else BLOCK_TYPE_FULL
 
     return blockList
+
+
+EMPTY_MASK_VALUE = 0
+FULL_MASK_VALUE = 1
+MARIO_MASK_VALUE = 2
+ENEMY_MASK_VALUE = 3
+
+
+def get_simplified_world(env):
+    world = np.zeros((15, 16, 4), dtype=np.int32)
+    blocks = read_blocks(env)
+
+    for row in range(0, 15):
+        for col in range(0, 16):
+            if blocks[row, col] == BLOCK_TYPE_EMPTY:
+                world[row, col, EMPTY_MASK_VALUE] = 1
+            elif blocks[row, col] == BLOCK_TYPE_FULL:
+                world[row, col, FULL_MASK_VALUE] = 1
+
+    mario_x, mario_y = get_mario_position(env)
+    mario_row = mario_y // 16
+    mario_col = mario_x // 16
+
+    world[mario_row, mario_col, MARIO_MASK_VALUE] = 1
+
+    enemy = get_enemy_positions(env)
+
+    for e in enemy:
+        e_x, e_y = e[0], e[1]
+        if e_x < 0 or e_y < 0 or e_x > 255:
+            break
+        e_row = e_y // 16
+        e_col = e_x // 16
+        world[e_row, e_col, ENEMY_MASK_VALUE] = 1
+
+    # To visualize a specific layer:
+    # for k in range(0, 4):
+    #     a = np.zeros((15, 16), dtype=np.int32)
+    #     for i in range(0, 15):
+    #         for j in range(0, 16):
+    #             a[i, j] = world[i, j, k]
+    #     print(f"value of dimension {k}: ")
+    #     print(a)
+
+    return world
