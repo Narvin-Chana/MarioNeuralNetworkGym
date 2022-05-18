@@ -1,5 +1,4 @@
 import numpy as np
-
 from collections import namedtuple
 from ramutils import *
 
@@ -35,7 +34,7 @@ def get_enemy_positions(env):
             # screen that is actually displayed, and then
             # add the offset from x_pos_screen
             enemy_loc_x = (x_pos_level * 0x100) + x_pos_screen
-            enemy_loc_y = read_ram(env, 0xCF + enemy_num)
+            enemy_loc_y = read_ram(env, 0xCF + enemy_num)[0]
             # Get row/col
             row = np.digitize(enemy_loc_y, ybins)
             col = np.digitize(enemy_loc_x, xbins)
