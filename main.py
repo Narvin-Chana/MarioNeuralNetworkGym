@@ -11,6 +11,29 @@ env = gym_super_mario_bros.make('SuperMarioBros-v0')
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
 
 
+def play_with_trained_model():
+    file_dir = os.getcwd()
+    network_filepath = os.path.join(file_dir, 'model.h5')
+    # Could be used if we already have partially trained the network and save an intermediary best
+    best_model = keras.models.load_model(network_filepath)
+
+    done = True
+    state = worldutils.get_simplified_world(env)
+    while True:
+        if done:
+            env.reset()
+        action_probs = best_model(np.array([state]), training=False)
+        # Take best action
+        action = tf.argmax(action_probs[0]).numpy()
+
+        _, reward, done, info = env.step(action)
+        state = worldutils.get_simplified_world(env)
+
+        env.render()
+
+    env.close()
+
+
 def main():
     """
     An example pipeline of applying Q learning.
@@ -88,8 +111,8 @@ def main():
             # Apply the sampled action in our environment
             _, reward, done, info = env.step(action)
 
-            #env.render()
-            #viewer.render(state)
+            # env.render()
+            # viewer.render(state)
 
             state_next = worldutils.get_simplified_world(env)
 
@@ -177,7 +200,7 @@ def main():
     env.close()
 
 
-#viewer = worldview.WorldViewer()
+# viewer = worldview.WorldViewer()
 
 main()
 #
