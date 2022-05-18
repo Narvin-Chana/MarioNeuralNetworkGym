@@ -84,8 +84,8 @@ def main():
 
             # Apply the sampled action in our environment
             state_next, reward, done, info = env.step(action)
-            # env.render()
-            worldutils.read_blocks(env)
+            env.render()
+            worldutils.get_mario_position(env)
             state_next = np.array(state_next)
 
             episode_reward += reward
@@ -173,4 +173,14 @@ def main():
     env.close()
 
 
-main()
+# main()
+
+done = True
+while True:
+    if done:
+        state = env.reset()
+    state, reward, done, info = env.step(env.action_space.sample())
+    worldutils.get_mario_position(env)
+    env.render()
+
+env.close()

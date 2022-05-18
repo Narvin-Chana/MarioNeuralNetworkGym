@@ -14,7 +14,7 @@ def get_enemy_positions(env):
     """
     Returns all the active enemies positions.
 
-    This function comes from Chrispresso that found a way to easily get all these positions.
+    This function comes from Chrispresso who found a way to easily get all these positions.
     (https://chrispresso.io/AI_Learns_To_Play_SMB_Using_GA_And_NN#results)
     :param env:
     :return:
@@ -27,7 +27,7 @@ def get_enemy_positions(env):
         # drawn or 1 if drawn to screen
         if enemy:
             # Grab the enemy location
-            x_pos_level  = read_ram(env, 0x6E + enemy_num)[0]
+            x_pos_level = read_ram(env, 0x6E + enemy_num)[0]
             x_pos_screen = read_ram(env, 0x87 + enemy_num)[0]
             # The width in pixels is 256. 0x100 == 256.
             # Multiplying by x_pos_level gets you the
@@ -45,6 +45,26 @@ def get_enemy_positions(env):
             enemy_locations.append(location)
 
     return enemy_locations
+
+
+Mario_X_Position = 0x0086
+Mario_Screen_Value = 0x006D
+Screen_Value = 0x071A
+Screen_Edge_X = 0x071C
+Mario_Y_Position = 0x00CE
+
+
+def get_mario_position(env):
+    """
+    Returns Mario's position inside the level (on screen).
+    :param env: The ram environment (needs to contain a 'ram' variable or wrap an environment that does)
+    :return: X and Y value of Mario's position on the screen (X: [0,256], Y: [0,240])
+    """
+    x_pos = env.ram[Mario_X_Position] + env.ram[Mario_Screen_Value] * 256 - (env.ram[Screen_Edge_X] + (env.ram[Screen_Value] * 256))
+    y_pos = env.ram[Mario_Y_Position]
+
+    print(x_pos, y_pos)
+    return x_pos, y_pos
 
 
 Empty = 0x00
