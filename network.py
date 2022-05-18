@@ -34,7 +34,7 @@ def set_up_nn():
     n_actions = 12
     # Whole state for now, but 240 * 256 * 3 = 184.320,
     # so obviously want to find a more compact representation of environment
-    data_size_in = (240, 256, 3)
+    data_size_in = (15, 16, 4)
     network = build_nn(data_size_in, n_actions)
     print(network.summary())
     return network

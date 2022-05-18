@@ -6,6 +6,7 @@ from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 import worldutils
 import worldview
 from network import *
+
 env = gym_super_mario_bros.make('SuperMarioBros-v0')
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
 
@@ -60,8 +61,9 @@ def main():
     update_target_network = 10000
 
     for episode_count in range(max_episodes):
-        state = env.reset()
+        env.reset()
         episode_reward = 0
+        state = worldutils.get_simplified_world(env)
 
         for timestep in range(1, max_steps_per_episode):
             frame_count += 1
@@ -84,10 +86,12 @@ def main():
             epsilon = max(epsilon, epsilon_min)
 
             # Apply the sampled action in our environment
-            state_next, reward, done, info = env.step(action)
-            env.render()
-            worldutils.get_mario_position(env)
-            state_next = np.array(state_next)
+            _, reward, done, info = env.step(action)
+
+            #env.render()
+            #viewer.render(state)
+
+            state_next = worldutils.get_simplified_world(env)
 
             episode_reward += reward
 
@@ -101,7 +105,6 @@ def main():
 
             # Update every fourth frame and once batch size is over 32
             if frame_count % update_after_actions == 0 and len(done_history) > batch_size:
-
                 # Get indices of samples for replay buffers
                 indices = np.random.choice(range(len(done_history)), size=batch_size)
 
@@ -174,16 +177,16 @@ def main():
     env.close()
 
 
-# main()
+#viewer = worldview.WorldViewer()
 
-viewer = worldview.WorldViewer()
-
-done = True
-while True:
-    if done:
-        state = env.reset()
-    state, reward, done, info = env.step(env.action_space.sample())
-    viewer.render(worldutils.get_simplified_world(env))
-    env.render()
-
-env.close()
+main()
+#
+# done = True
+# while True:
+#     if done:
+#         state = env.reset()
+#     state, reward, done, info = env.step(env.action_space.sample())
+#     viewer.render(worldutils.get_simplified_world(env))
+#     env.render()
+#
+# env.close()
