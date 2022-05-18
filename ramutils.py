@@ -7,4 +7,4 @@ def read_ram(env, start, end=None):
     :return: An array of decimal values for each byte read
     """
 
-    return [env.ram[a] for a in range(start, start + 1 if end is None else end, 1)]
+    return [env.ram[a] for a in range(start, start + 1 if end is None else end + 1, 1)]
