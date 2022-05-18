@@ -17,10 +17,10 @@ class WorldViewer:
         self.screen = pygame.display.set_mode((width, height))
         self.fill_color = FILL_COLOR
         self.colormap = [
-            (0, 0, 0),              # Empty blocks
-            (255, 255, 255),        # Full blocks
-            (0, 255, 0),            # Mario
-            (255, 0, 0)             # Enemy
+            (0, 0, 0),  # Empty blocks
+            (255, 255, 255),  # Full blocks
+            (0, 255, 0),  # Mario
+            (255, 0, 0)  # Enemy
         ]
 
     def render(self, world):

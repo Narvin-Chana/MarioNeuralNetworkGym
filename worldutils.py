@@ -132,7 +132,8 @@ def get_simplified_world(env):
     #     for i in range(0, 15):
     #         for j in range(0, 16):
     #             a[i, j] = world[i, j, k]
-    #     print(f"value of dimension {k}: ")
-    #     print(a)
+    #     if k == LAYER_YOU_WANT_TO_SEE:
+    #         print(f"value of dimension {k}: ")
+    #         print(a)
 
     return world

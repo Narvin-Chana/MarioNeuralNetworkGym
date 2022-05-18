@@ -4,6 +4,7 @@ import gym_super_mario_bros
 from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 
 import worldutils
+import worldview
 from network import *
 env = gym_super_mario_bros.make('SuperMarioBros-v0')
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
@@ -175,12 +176,14 @@ def main():
 
 # main()
 
+viewer = worldview.WorldViewer()
+
 done = True
 while True:
     if done:
         state = env.reset()
     state, reward, done, info = env.step(env.action_space.sample())
-    worldutils.get_mario_position(env)
+    viewer.render(worldutils.get_simplified_world(env))
     env.render()
 
 env.close()
