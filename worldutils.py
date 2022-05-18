@@ -36,8 +36,8 @@ def get_enemy_positions(env):
             enemy_loc_x = (x_pos_level * 0x100) + x_pos_screen
             enemy_loc_y = read_ram(env, 0xCF + enemy_num)[0]
             # Get row/col
-            row = np.digitize(enemy_loc_y, ybins)
-            col = np.digitize(enemy_loc_x, xbins)
+            row = enemy_loc_y // 16
+            col = enemy_loc_x // 16
             # Add location.
             # col moves in x-direction
             # row moves in y-direction
