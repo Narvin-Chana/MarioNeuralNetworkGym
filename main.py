@@ -2,6 +2,8 @@ import os
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
 from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
+
+import worldutils
 from network import *
 env = gym_super_mario_bros.make('SuperMarioBros-v0')
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
@@ -83,6 +85,7 @@ def main():
             # Apply the sampled action in our environment
             state_next, reward, done, info = env.step(action)
             env.render()
+            worldutils.read_blocks(env)
             state_next = np.array(state_next)
 
             episode_reward += reward

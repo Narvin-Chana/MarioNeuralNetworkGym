@@ -1,4 +1,5 @@
 import numpy as np
+
 from collections import namedtuple
 from ramutils import *
 
@@ -45,3 +46,33 @@ def get_enemy_positions(env):
             enemy_locations.append(location)
 
     return enemy_locations
+
+
+Empty = 0x00
+Full = 0x01
+Blocks_Address = 0x0500
+
+
+def read_blocks(env):
+    """
+    Reads the blocks state on the current screen.
+    :param env: The ram environment (needs to contain a 'ram' variable or wrap an environment that does)
+    :return: A two-sided array
+    """
+    blockList = np.zeros((15, 16), dtype=np.int32)
+
+    for row in range(0, 15):
+        for col in range(0, 16):
+            if row < 2:
+                blockList[row, col] = Empty
+            else:
+                x, y = col * 16, row * 16
+                page = (x // 256) % 2
+                sub_x = (x % 256) // 16
+                sub_y = (y - 32) // 16
+
+                addr = Blocks_Address + page * 208 + sub_y * 16 + sub_x
+
+                blockList[row, col] = Empty if env.ram[addr] == Empty else Full
+
+    return blockList
