@@ -114,7 +114,8 @@ def get_simplified_world(env):
     mario_row = mario_y // 16
     mario_col = mario_x // 16
 
-    world[mario_row, mario_col, MARIO_MASK_VALUE] = 1
+    if 0 <= mario_row <= 14 and 0 <= mario_col <= 15:
+        world[mario_row, mario_col, MARIO_MASK_VALUE] = 1
 
     enemy = get_enemy_positions(env)
 
