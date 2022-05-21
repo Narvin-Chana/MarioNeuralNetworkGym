@@ -100,7 +100,7 @@ ENEMY_MASK_VALUE = 3
 
 
 def get_simplified_world(env):
-    world = np.zeros((15, 16, 4), dtype=np.int32)
+    world = np.zeros((15, 16, 4), dtype=np.byte)
     blocks = read_blocks(env)
 
     for row in range(0, 15):
