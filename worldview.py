@@ -48,3 +48,4 @@ class WorldViewer:
                 pygame.draw.rect(self.screen, self.colormap[color_id], rect)
 
         pygame.display.flip()
+        pygame.event.pump()
