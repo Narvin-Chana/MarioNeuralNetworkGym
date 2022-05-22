@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from collections import namedtuple
 from ramutils import *
@@ -111,8 +113,8 @@ def get_simplified_world(env):
                 world[row, col, FULL_MASK_VALUE] = 1
 
     mario_x, mario_y = get_mario_position(env)
-    mario_row = mario_y // 16
-    mario_col = mario_x // 16
+    mario_row = round(mario_y / 16 + 0.5)
+    mario_col = round(mario_x / 16 + 0.5)
 
     if 0 <= mario_row <= 14 and 0 <= mario_col <= 15:
         world[mario_row, mario_col, MARIO_MASK_VALUE] = 1
@@ -123,8 +125,8 @@ def get_simplified_world(env):
         e_x, e_y = e[0], e[1]
         if e_x < 0 or e_y < 0 or e_x > 255:
             break
-        e_row = e_y // 16
-        e_col = e_x // 16
+        e_row = min(round(e_y / 16 + 0.5), 14)
+        e_col = min(round(e_x / 16 + 0.5), 15)
         world[e_row, e_col, ENEMY_MASK_VALUE] = 1
 
     # To visualize a specific layer:
