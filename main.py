@@ -18,16 +18,15 @@ def play_with_trained_model():
     best_model = keras.models.load_model(network_filepath)
 
     done = True
-    state = worldutils.get_simplified_world(env)
     while True:
         if done:
             env.reset()
-        action_probs = best_model(np.array([state]), training=False)
+        state = worldutils.get_simplified_world(env)
+        action_probs = best_model(np.array([state]))
         # Take best action
         action = tf.argmax(action_probs[0]).numpy()
 
         _, reward, done, info = env.step(action)
-        state = worldutils.get_simplified_world(env)
 
         env.render()
 
