@@ -69,22 +69,36 @@ def main():
     episode_reward_history = []
     running_reward = 0
     frame_count = 0
-    max_episodes = 10000
+
     # Number of frames to take random action and observe output
-    epsilon_random_frames = 50000
+    max_episodes = 10000
+
+    # Minimal mean reward value that is expected, if agent performs worse than this we cancel the tentative
+    minimal_reward_progress = 0.01
+    # Number of rewards value taken for the mean calculation
+    mean_reward_nb = 200
+    # Timestep when we will check if the agent made any progress
+    check_progress_step = 200
+
     # Number of frames for exploration
-    epsilon_greedy_frames = 1000000.0
+    epsilon_random_frames = 50000
+
     # Maximum replay length
+    epsilon_greedy_frames = 1000000.0
+
     # Note: The Deepmind paper Mnih et al. (2013) suggests 1000000 however this causes memory issues
     max_memory_length = 100000
+
     # Train the model after 4 actions
     update_after_actions = 4
+
     # How often to update the target network
     update_target_network = 10000
 
     for episode_count in range(max_episodes):
         env.reset()
         episode_reward = 0
+
         state = worldutils.get_simplified_world(env)
 
         for timestep in range(1, max_steps_per_episode):
@@ -183,6 +197,13 @@ def main():
 
             if done:
                 break
+
+            if timestep == check_progress_step:
+                mean_reward = np.mean(rewards_history[-mean_reward_nb:])
+                if mean_reward < minimal_reward_progress:
+                    # print(f"Mean reward: {mean_reward} \n{rewards_history[-mean_reward_nb:]} ")
+                    # print("Not enough progress, cancelling")
+                    break
 
         # Update running reward to check condition for solving
         episode_reward_history.append(episode_reward)
