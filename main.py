@@ -95,7 +95,6 @@ def main():
             agent.remember(state, action, state_next, done, reward)
 
             state = state_next
-
             # Update every fourth frame and once batch size is over 32
             if frame_count % update_after_actions == 0 and len(agent.memory) > batch_size:
                 agent.update()

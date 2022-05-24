@@ -51,13 +51,23 @@ class QAgent:
 
     def update(self):
         # Get indices of samples for replay buffers
-        sampled_memory = np.array(random.sample(self.memory, self.batch_size))
+        indices = np.random.choice(range(len(self._memory)), size=self.batch_size)
+
         # Using list comprehension to sample from replay buffer
-        state_sample = list(sampled_memory[:, 0])
-        action_sample = list(sampled_memory[:, 1])
-        state_next_sample = list(sampled_memory[:, 2])
-        done_sample = tf.convert_to_tensor(list(sampled_memory[:, 3].astype(float)))
-        rewards_sample = list(sampled_memory[:, 4])
+        state_sample = np.array([self._memory[i][0] for i in indices])
+        state_next_sample = np.array([self._memory[i][2] for i in indices])
+        rewards_sample = [self._memory[i][4] for i in indices]
+        action_sample = [self._memory[i][1] for i in indices]
+        done_sample = tf.convert_to_tensor(
+            [float(self._memory[i][3]) for i in indices]
+        )
+        #sampled_memory = np.array(random.sample(self.memory, self.batch_size))
+        # Using list comprehension to sample from replay buffer
+        #state_sample = sampled_memory[:, 0]
+        #action_sample = list(sampled_memory[:, 1])
+        #state_next_sample = sampled_memory[:, 2]
+        #done_sample = tf.convert_to_tensor(list(sampled_memory[:, 3].astype(float)))
+        #rewards_sample = list(sampled_memory[:, 4])
 
         # Build the updated Q-values for the sampled future states
         # Use the target model for stability
