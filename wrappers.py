@@ -39,7 +39,7 @@ class EpisodicLifeEnv(gym.Wrapper):
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
-        if self.env.unwrapped._is_dying:
+        if self.env.unwrapped._is_game_over or info["time"] == 0:
             # Also checks for if the player is dead
             done = True
         return obs, reward, done, info
@@ -53,9 +53,26 @@ class EpisodicLifeEnv(gym.Wrapper):
         return obs
 
 
+class OneLife(gym.Wrapper):
+    def __init__(self, env):
+        """Make end-of-life == end-of-episode
+        """
+        gym.Wrapper.__init__(self, env)
+        self.set_lives_to_zero()
+
+    def set_lives_to_zero(self):
+        self.env.ram[0x075a] = 1
+
+    def reset(self, **kwargs):
+        obs = self.env.reset(**kwargs)
+        self.set_lives_to_zero()
+        return obs
+
+
 def wrapper(env, skip_count):
     """Apply a common set of wrappers for games."""
     # Removed since episodes being of a fixed duration was preferred.
-    # env = EpisodicLifeEnv(env)
+    env = EpisodicLifeEnv(env)
     env = SkipFrame(env, skip_count)
+    env = OneLife(env)
     return env
