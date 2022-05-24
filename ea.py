@@ -10,7 +10,7 @@ import gym_super_mario_bros
 
 from wrappers import wrapper
 
-NB_GEN = 10000
+NB_GEN = 20000
 POP_SIZE = 25
 IND_SIZE = 3000
 NB_ACTIONS = 5
@@ -19,7 +19,7 @@ IND_CROSSOVER_RATE = 0.5
 IND_MUTATION_RAT = 0.1
 GENE_MUTATION_RATE = 1 / IND_SIZE
 
-SELECT_SIZE = 2
+SELECT_SIZE = 10
 
 CUSTOM_MOVEMENT = [["NOOP"], ["right", "A", "B"], ["right", "B"], ["left", "A", "B"], ["left", "B"]]
 
@@ -38,6 +38,9 @@ def evaluate_individual(ind):
     done = False
 
     while not done:
+        if current_step >= IND_SIZE:
+            break
+
         _, reward, d, info = env.step(ind[current_step])
         total_reward += reward
         done = d
