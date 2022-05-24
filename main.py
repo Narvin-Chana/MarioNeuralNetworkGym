@@ -5,10 +5,14 @@ from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 
 import worldutils
 import worldview
+from wrappers import wrapper
 from network import *
 
 env = gym_super_mario_bros.make('SuperMarioBros-v0')
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
+# Applies custom wrappers to the environment.
+frameSkipCount = 4
+env = wrapper(env, 4)
 
 
 def play_with_trained_model():
@@ -96,6 +100,7 @@ def main():
     update_target_network = 10000
 
     for episode_count in range(max_episodes):
+        print(f"Start of episode {episode_count}.")
         env.reset()
         episode_reward = 0
 
@@ -124,7 +129,7 @@ def main():
             # Apply the sampled action in our environment
             _, reward, done, info = env.step(action)
 
-            # env.render()
+            env.render()
             # viewer.render(state)
 
             state_next = worldutils.get_simplified_world(env)
@@ -195,7 +200,8 @@ def main():
                 del action_history[:1]
                 del done_history[:1]
 
-            if done:
+            if done or info['flag_get']:
+                print("Done!")
                 break
 
             if timestep == check_progress_step:
@@ -210,10 +216,11 @@ def main():
         if len(episode_reward_history) > 100:
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
+        print(f"End of episode {episode_count}. Reward mean: {running_reward}")
 
-        if running_reward > 40:  # Condition to consider the task solved
-            print("Solved at episode {}!".format(episode_count))
-            break
+        # if running_reward > 500:  # Condition to consider the task solved
+        #     print("Solved at episode {}!".format(episode_count))
+        #     break
 
     # Save best network
     model.save(network_filepath)
@@ -223,6 +230,9 @@ def main():
 # viewer = worldview.WorldViewer()
 
 main()
+
+# play_with_trained_model()
+
 #
 # done = True
 # while True:
