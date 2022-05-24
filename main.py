@@ -1,7 +1,6 @@
 import os
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
-from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 
 import worldutils
 import worldview
@@ -9,7 +8,7 @@ from wrappers import wrapper
 from network import *
 
 env = gym_super_mario_bros.make('SuperMarioBros-v0')
-env = JoypadSpace(env, COMPLEX_MOVEMENT)
+env = JoypadSpace(env, [["NOOP"], ["right", "A", "B"], ["right", "B"], ["left", "A", "B"], ["left", "B"]])
 # Applies custom wrappers to the environment.
 frameSkipCount = 4
 env = wrapper(env, 4)
@@ -49,7 +48,7 @@ def main():
     network_filepath = os.path.join(file_dir, 'model.h5')
     # Could be used if we already have partially trained the network and save an intermediary best
     # best_network = keras.models.load_model(network_filepath)
-    n_actions = 12
+    n_actions = 5
     gamma = 0.99  # Discount factor for past rewards
     epsilon = 1.0  # Epsilon greedy parameter
     epsilon_min = 0.1  # Minimum epsilon greedy parameter
@@ -59,8 +58,8 @@ def main():
     )  # Rate at which to reduce chance of random action being taken
     batch_size = 32  # Size of batch taken from replay buffer
     max_steps_per_episode = 10000
-    model = set_up_nn()
-    model_target = set_up_nn()
+    model = set_up_nn(n_actions)
+    model_target = set_up_nn(n_actions)
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
     # Using huber loss for stability
     loss_function = tf.keras.losses.Huber()

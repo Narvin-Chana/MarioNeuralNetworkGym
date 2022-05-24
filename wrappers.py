@@ -2,6 +2,7 @@ import gym
 
 """
     Allows for the skipping of frames to simplify calculations and gain compute time.
+    Applies one action to a 'skip' amount of frames.
 """
 
 

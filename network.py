@@ -30,8 +30,7 @@ def build_nn(data_size_in, n_classes):
     return Model(inputs=inputs, outputs=last)
 
 
-def set_up_nn():
-    n_actions = 12
+def set_up_nn(n_actions):
     # Whole state for now, but 240 * 256 * 3 = 184.320,
     # so obviously want to find a more compact representation of environment
     data_size_in = (15, 16, 4)
