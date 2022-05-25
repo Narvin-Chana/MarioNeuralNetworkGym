@@ -1,4 +1,6 @@
 import os
+import time
+
 import numpy as np
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
@@ -69,6 +71,8 @@ def main():
     # How often to update the target network
     update_target_network = 10000
 
+    t0 = time.time()
+
     for episode_count in range(max_episodes):
         print(f"Start of episode {episode_count}.")
         env.reset()
@@ -124,6 +128,10 @@ def main():
         # if running_reward > 500:  # Condition to consider the task solved
         #     print("Solved at episode {}!".format(episode_count))
         #     break
+
+    t1 = time.time()
+
+    print("Time elapsed during execution: " + str(t1-t0))
 
     # Save best network
 
