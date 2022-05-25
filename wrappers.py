@@ -71,7 +71,6 @@ class OneLife(gym.Wrapper):
 
 def wrapper(env, skip_count):
     """Apply a common set of wrappers for games."""
-    # Removed since episodes being of a fixed duration was preferred.
     env = EpisodicLifeEnv(env)
     env = SkipFrame(env, skip_count)
     env = OneLife(env)
