@@ -64,7 +64,7 @@ def main():
     frame_count = 0
 
     # Number of frames to take random action and observe output
-    max_episodes = 10000
+    max_episodes = 1000
 
     # Train the model after 4 actions
     update_after_actions = 4
