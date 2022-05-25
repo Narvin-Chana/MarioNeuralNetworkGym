@@ -43,8 +43,7 @@ def evaluate_individual(ind):
         current_step += 1
         env.render()
 
-
-    return (total_reward,)
+    return total_reward,
 
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -97,7 +96,6 @@ if __name__ == "__main__":
         # The population is entirely replaced by the offspring
         pop[:] = offspring
         print(stats.compile(pop))
-
 
 # with open("results/results_ea_{}.txt".format(datetime.now().strftime("%H-%M-%S")), "w") as fw:
 #    fw.write(str(hof))
