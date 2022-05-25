@@ -1,6 +1,7 @@
 import os
 import time
 
+import gym
 import numpy as np
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
@@ -49,12 +50,12 @@ def main():
     known to the environment
     """
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'model.h5')
+    network_filepath = os.path.join(file_dir, 'model')
     n_actions = 5
     batch_size = 32  # Size of batch taken from replay buffer
     # Note: The Deepmind paper Mnih et al. (2013) suggests 1000000 however this causes memory issues
-    max_memory_length = 100000
-    agent = Agent.QAgent(n_actions, lr=0.00025, gamma=0.99, epsilon=1.0, epsilon_min=0.1,
+    max_memory_length = 30000
+    agent = Agent.QAgent(n_actions, lr=0.00025, gamma=0.90, epsilon=1, epsilon_min=0.02,
                          epsilon_max=1.0, batch_size=batch_size, max_mem_length=max_memory_length)
 
     max_steps_per_episode = 10000
@@ -64,7 +65,7 @@ def main():
     frame_count = 0
 
     # Number of frames to take random action and observe output
-    max_episodes = 1000
+    max_episodes = 2000
 
     # Train the model after 4 actions
     update_after_actions = 4
@@ -134,8 +135,6 @@ def main():
 
     print("Time elapsed during execution: " + str(t1-t0))
 
-    # Save best network
-
     agent.save_network(network_filepath)
     env.close()
 
@@ -145,14 +144,3 @@ def main():
 main()
 
 # play_with_trained_model()
-
-#
-# done = True
-# while True:
-#     if done:
-#         state = env.reset()
-#     state, reward, done, info = env.step(env.action_space.sample())
-#     viewer.render(worldutils.get_simplified_world(env))
-#     env.render()
-#
-# env.close()
