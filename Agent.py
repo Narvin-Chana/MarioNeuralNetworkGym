@@ -1,7 +1,8 @@
-from network import *
 from collections import deque
+
 import numpy as np
-import random
+
+from network import *
 
 
 class QAgent:
