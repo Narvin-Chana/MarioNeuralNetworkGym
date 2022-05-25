@@ -9,7 +9,7 @@ import worldview
 from wrappers import wrapper
 from network import *
 
-env = gym_super_mario_bros.make('SuperMarioBros-v0')
+env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 env = JoypadSpace(env, [["NOOP"], ["right", "A", "B"], ["right", "B"], ["left", "A", "B"], ["left", "B"]])
 # Applies custom wrappers to the environment.
 frameSkipCount = 4
