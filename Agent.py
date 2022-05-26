@@ -23,6 +23,7 @@ class QAgent:
         self._memory = deque(maxlen=max_mem_length)
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr, clipnorm=1.0)
         self.loss_function = tf.keras.losses.Huber()
+        self.model.compile(loss=self.loss_function, optimizer=self.optimizer)
 
     @property
     def memory(self):

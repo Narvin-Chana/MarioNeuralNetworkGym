@@ -21,7 +21,7 @@ env = wrapper(env, frameSkipCount)
 
 def play_with_trained_model():
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'model.h5')
+    network_filepath = os.path.join(file_dir, 'model')
     # Could be used if we already have partially trained the network and save an intermediary best
     best_model = keras.models.load_model(network_filepath)
 
@@ -30,7 +30,9 @@ def play_with_trained_model():
         if done:
             env.reset()
         state = worldutils.get_simplified_world(env)
-        action_probs = best_model(np.array([state]))
+        state_tensor = tf.convert_to_tensor(state)
+        state_tensor = tf.expand_dims(state_tensor, 0)
+        action_probs = best_model(state_tensor, training=False)
         # Take best action
         action = tf.argmax(action_probs[0]).numpy()
 
