@@ -17,8 +17,8 @@ from wrappers import wrapper
 
 SAVE_INTERVAL = 10
 
-NB_GEN = 1
-POP_SIZE = 8
+NB_GEN = 400
+POP_SIZE = 80
 IND_SIZE = 3000
 NB_ACTIONS = 5
 
