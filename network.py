@@ -4,25 +4,23 @@ from keras import layers, models, activations, regularizers, Model
 
 
 def build_nn(data_size_in, n_classes):
-    # This is a functional way of building the network which allows for more flexibility over a sequential one
+    """
+    Build a small convolutional neural network
+    :param data_size_in: shape of the incoming observation space
+    :param n_classes: how many outputs the network produces
+    :return: network
+    """
     inputs = layers.Input(shape=data_size_in)
 
-    # Different arguments can be passed to conv such as which activation, regularization, padding etc
-    x_0 = layers.Conv2D(8, 2, strides=1, padding="same", activation="relu",
-                        kernel_regularizer="l2")(inputs)
-
-    x_1 = layers.Conv2D(16, 3, strides=2, padding="same", activation="relu",
-                        kernel_regularizer="l2")(x_0)
-
-    x_2 = layers.Conv2D(16, 3, strides=2, padding="same", activation="relu",
-                        kernel_regularizer="l2")(x_1)
+    x_0 = layers.Conv2D(8, 2, strides=1, activation="relu")(inputs)
+    x_1 = layers.Conv2D(16, 3, strides=2, padding="same", activation="relu")(x_0)
+    x_2 = layers.Conv2D(16, 3, strides=2, activation="relu")(x_1)
 
     x_3 = layers.Conv2D(16, 1, activation="relu")(x_2)
     x_4 = layers.Conv2D(2, 1, activation="relu")(x_3)
     x = layers.Flatten()(x_4)
-    # Similar to conv. In this case I also passed an initializer, but conv can also take that argument
-    dense = layers.Dense(n_classes, kernel_initializer="he_uniform", kernel_regularizer="l2")(x)
-    # Normally speaking, leakyReLU is actually a better model to use which is why I show it here
+
+    dense = layers.Dense(n_classes, kernel_initializer="he_uniform")(x)
     leak = layers.LeakyReLU()(dense)
     last = layers.Softmax()(leak)
 
@@ -30,8 +28,11 @@ def build_nn(data_size_in, n_classes):
 
 
 def set_up_nn(n_actions):
-    # Whole state for now, but 240 * 256 * 3 = 184.320,
-    # so obviously want to find a more compact representation of environment
+    """
+    Call to build a neural network
+    :param n_actions: how many actions the network can output
+    :return: constructed network
+    """
     data_size_in = (15, 16, 4)
     network = build_nn(data_size_in, n_actions)
     print(network.summary())

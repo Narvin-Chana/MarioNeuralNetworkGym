@@ -16,8 +16,8 @@ class QAgent:
         self.epsilon_interval = (
                 epsilon_max - epsilon_min)  # Rate at which to reduce chance of random action being taken
         self.batch_size = batch_size
-        self.epsilon_random_frames = 50000  # Number of frames for exploration
-        self.epsilon_greedy_frames = 1000000.0  # Maximum replay length
+        self.epsilon_random_frames = 12000  # Number of frames for exploration
+        self.epsilon_greedy_frames = 250000.0  # Maximum replay length
         self.model = set_up_nn(n_actions)
         self.model_target = set_up_nn(n_actions)
         self._memory = deque(maxlen=max_mem_length)
@@ -27,9 +27,19 @@ class QAgent:
 
     @property
     def memory(self):
+        """
+        Getter for memory
+        :return: memory
+        """
         return self._memory
 
     def step(self, state, frame_count):
+        """
+        Act in the environment and decay epsilon parameter
+        :param state: the current state of the game
+        :param frame_count: how many frames have been counted
+        :return: a random or the best action
+        """
         if frame_count < self.epsilon_random_frames or self.epsilon > np.random.rand(1)[0]:
             # Take random action
             action = np.random.choice(self.n_actions)
@@ -38,7 +48,7 @@ class QAgent:
             # From environment state
             state_tensor = tf.convert_to_tensor(state)
             state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = self.model(state_tensor, training=False)
+            action_probs = self.model.predict(state_tensor)
             # Take best action
             action = tf.argmax(action_probs[0]).numpy()
 
@@ -49,9 +59,22 @@ class QAgent:
         return action
 
     def remember(self, state, action, state_next, done, reward):
+        """
+        Save information for replay buffer
+        :param state: current state of the game
+        :param action: action taken in the current state of the game
+        :param state_next: the state of the game after taking the specified action
+        :param done: whether Mario has died or won
+        :param reward: the reward obtained after taking the specified action
+        """
         self.memory.append((state, action, state_next, done, reward))
 
     def update(self):
+        """
+        Experience replay sampled from memory
+        Based on these experiences, build updated Q-values and calculate loss between new and old Q-values
+        Finally, backwards pass over network and update it
+        """
         # Get indices of samples for replay buffers
         indices = np.random.choice(range(len(self._memory)), size=self.batch_size)
 
@@ -63,13 +86,6 @@ class QAgent:
         done_sample = tf.convert_to_tensor(
             [float(self._memory[i][3]) for i in indices]
         )
-        #sampled_memory = np.array(random.sample(self.memory, self.batch_size))
-        # Using list comprehension to sample from replay buffer
-        #state_sample = sampled_memory[:, 0]
-        #action_sample = list(sampled_memory[:, 1])
-        #state_next_sample = sampled_memory[:, 2]
-        #done_sample = tf.convert_to_tensor(list(sampled_memory[:, 3].astype(float)))
-        #rewards_sample = list(sampled_memory[:, 4])
 
         # Build the updated Q-values for the sampled future states
         # Use the target model for stability
@@ -103,7 +119,9 @@ class QAgent:
         self.model_target.set_weights(self.model.get_weights())
 
     def handle_mem(self):
+        # clear up memory by removing oldest experience
         self._memory.popleft()
 
     def save_network(self, filepath):
+        # Save the network to the specified path
         self.model.save(filepath)

@@ -13,7 +13,8 @@ from wrappers import wrapper
 from network import *
 
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
-env = JoypadSpace(env, [["NOOP"], ["right", "A", "B"], ["right", "B"], ["left", "A", "B"], ["left", "B"]])
+MOVEMENT = [['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left']]
+env = JoypadSpace(env, MOVEMENT)
 # Applies custom wrappers to the environment.
 frameSkipCount = 4
 env = wrapper(env, frameSkipCount)
@@ -32,7 +33,7 @@ def play_with_trained_model():
         state = worldutils.get_simplified_world(env)
         state_tensor = tf.convert_to_tensor(state)
         state_tensor = tf.expand_dims(state_tensor, 0)
-        action_probs = best_model(state_tensor, training=False)
+        action_probs = best_model.predict(state_tensor)
         # Take best action
         action = tf.argmax(action_probs[0]).numpy()
 
@@ -53,7 +54,7 @@ def main():
     """
     file_dir = os.getcwd()
     network_filepath = os.path.join(file_dir, 'model')
-    n_actions = 5
+    n_actions = len(MOVEMENT)
     batch_size = 32  # Size of batch taken from replay buffer
     # Note: The Deepmind paper Mnih et al. (2013) suggests 1000000 however this causes memory issues
     max_memory_length = 30000
@@ -73,7 +74,7 @@ def main():
     update_after_actions = 4
 
     # How often to update the target network
-    update_target_network = 10000
+    update_target_network = 2500
 
     t0 = time.time()
 
