@@ -1,16 +1,13 @@
 import os
 import time
 
-import gym
-import numpy as np
-from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
-import Agent
+from nes_py.wrappers import JoypadSpace
 
+import Agent
 import worldutils
-import worldview
-from wrappers import wrapper
 from network import *
+from wrappers import wrapper
 
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 MOVEMENT = [['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left']]
@@ -24,18 +21,18 @@ def play_with_trained_model():
     file_dir = os.getcwd()
     network_filepath = os.path.join(file_dir, 'model')
     # Could be used if we already have partially trained the network and save an intermediary best
-    best_model = keras.models.load_model(network_filepath)
+    best_model = set_up_nn(len(MOVEMENT))
+    best_model.load_state_dict(torch.load(network_filepath))
 
     done = True
     while True:
         if done:
-            env.reset()
+            break
         state = worldutils.get_simplified_world(env)
-        state_tensor = tf.convert_to_tensor(state)
-        state_tensor = tf.expand_dims(state_tensor, 0)
-        action_probs = best_model.predict(state_tensor)
+        state_tensor = torch.Tensor([state])
+        action_probs = best_model(state_tensor)
         # Take best action
-        action = tf.argmax(action_probs[0]).numpy()
+        action = torch.argmax(action_probs[0]).numpy()
 
         _, reward, done, info = env.step(action)
 
@@ -84,6 +81,7 @@ def main():
         episode_reward = 0
 
         state = worldutils.get_simplified_world(env)
+        state = np.transpose(state, (2, 0, 1))
 
         for timestep in range(1, max_steps_per_episode):
             frame_count += 1
@@ -97,6 +95,7 @@ def main():
             # viewer.render(state)
 
             state_next = worldutils.get_simplified_world(env)
+            state_next = np.transpose(state_next, (2, 0, 1))
 
             episode_reward += reward
 
@@ -104,9 +103,6 @@ def main():
             agent.remember(state, action, state_next, done, reward)
 
             state = state_next
-            # Update every fourth frame and once batch size is over 32
-            if frame_count % update_after_actions == 0 and len(agent.memory) > batch_size:
-                agent.update()
 
             if frame_count % update_target_network == 0:
                 # update the target network with new weights
@@ -114,6 +110,10 @@ def main():
                 # Log details
                 template = "running reward: {:.2f} at episode {}, frame count {}"
                 print(template.format(running_reward, episode_count, frame_count))
+
+            # Update every fourth frame and once batch size is over 32
+            if frame_count % update_after_actions == 0 and len(agent.memory) > batch_size:
+                agent.update()
 
             # Limit the state and reward history
             if len(agent.memory) > max_memory_length:

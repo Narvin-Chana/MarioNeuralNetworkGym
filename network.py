@@ -1,30 +1,43 @@
-import tensorflow as tf
-from tensorflow import keras
-from keras import layers, models, activations, regularizers, Model
+import numpy as np
+import torch
+import torch.nn as nn
 
 
-def build_nn(data_size_in, n_classes):
+class DQNSolver(nn.Module):
     """
-    Build a small convolutional neural network
-    :param data_size_in: shape of the incoming observation space
-    :param n_classes: how many outputs the network produces
-    :return: network
+    Convolutional Neural Net with 3 conv layers and two linear layers
     """
-    inputs = layers.Input(shape=data_size_in)
 
-    x_0 = layers.Conv2D(8, 2, strides=1, activation="relu")(inputs)
-    x_1 = layers.Conv2D(16, 3, strides=2, padding="same", activation="relu")(x_0)
-    x_2 = layers.Conv2D(16, 3, strides=2, activation="relu")(x_1)
+    def __init__(self, input_shape, n_actions):
+        super(DQNSolver, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_channels=input_shape[-1], out_channels=8, kernel_size=2, stride=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=8, out_channels=16, kernel_size=3, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=16, out_channels=2, kernel_size=1, stride=1),
+            nn.ReLU(),
+            nn.Flatten(),
+        )
 
-    x_3 = layers.Conv2D(16, 1, activation="relu")(x_2)
-    x_4 = layers.Conv2D(2, 1, activation="relu")(x_3)
-    x = layers.Flatten()(x_4)
+        print(self)
 
-    dense = layers.Dense(n_classes, kernel_initializer="he_uniform")(x)
-    leak = layers.LeakyReLU()(dense)
-    last = layers.Softmax()(leak)
+        conv_out_size = self._get_conv_out(input_shape)
+        self.fc = nn.Sequential(
+            nn.Linear(conv_out_size, n_actions),
+            nn.LeakyReLU(),
+            nn.Softmax(dim=0)
+        )
 
-    return Model(inputs=inputs, outputs=last)
+    def _get_conv_out(self, shape):
+        o = self.conv(torch.zeros(1, *shape))
+        return int(np.prod(o.size()))
+
+    def forward(self, x):
+        conv_out = self.conv(x).view(x.size()[0], -1)
+        return self.fc(conv_out)
 
 
 def set_up_nn(n_actions):
@@ -34,6 +47,6 @@ def set_up_nn(n_actions):
     :return: constructed network
     """
     data_size_in = (15, 16, 4)
-    network = build_nn(data_size_in, n_actions)
-    print(network.summary())
+    network = DQNSolver(data_size_in, n_actions)
+    print(network)
     return network

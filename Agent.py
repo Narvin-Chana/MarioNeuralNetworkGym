@@ -1,12 +1,11 @@
 from collections import deque
 
-import numpy as np
-
 from network import *
 
 
 class QAgent:
-    def __init__(self, n_actions, lr, gamma, epsilon, epsilon_decay, epsilon_min, epsilon_max, batch_size, max_mem_length):
+    def __init__(self, n_actions, lr, gamma, epsilon, epsilon_decay, epsilon_min, epsilon_max, batch_size,
+                 max_mem_length):
         self.n_actions = n_actions
         self.lr = lr  # learning rate for optimizer
         self.gamma = gamma  # Discount factor for past rewards
@@ -20,9 +19,8 @@ class QAgent:
         self.model = set_up_nn(n_actions)
         self.model_target = set_up_nn(n_actions)
         self._memory = deque(maxlen=max_mem_length)
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr, clipnorm=1.0)
-        self.loss_function = tf.keras.losses.Huber()
-        self.model.compile(loss=self.loss_function, optimizer=self.optimizer)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+        self.loss_function = nn.SmoothL1Loss()
 
     @property
     def memory(self):
@@ -45,11 +43,10 @@ class QAgent:
         else:
             # Predict action Q-values
             # From environment state
-            state_tensor = tf.convert_to_tensor(state)
-            state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = self.model.predict(state_tensor)
+            state_tensor = torch.Tensor([state])
+            action_probs = self.model(state_tensor)
             # Take best action
-            action = tf.argmax(action_probs[0]).numpy()
+            action = torch.argmax(action_probs[0]).numpy()
 
         return action
 
@@ -78,36 +75,30 @@ class QAgent:
         state_next_sample = np.array([self._memory[i][2] for i in indices])
         rewards_sample = [self._memory[i][4] for i in indices]
         action_sample = [self._memory[i][1] for i in indices]
-        done_sample = tf.convert_to_tensor(
-            [float(self._memory[i][3]) for i in indices]
-        )
+        done_sample = torch.Tensor([float(self._memory[i][3]) for i in indices])
+
+        self.optimizer.zero_grad()
 
         # Build the updated Q-values for the sampled future states
         # Use the target model for stability
-        future_rewards = self.model_target.predict(state_next_sample)
+        future_rewards = self.model_target(state_next_sample)
         # Q value = reward + discount factor * expected future reward
-        updated_q_values = rewards_sample + self.gamma * tf.reduce_max(
-            future_rewards, axis=1
-        )
+        updated_q_values = rewards_sample + self.gamma * future_rewards.max(1)
 
         # If final frame set the last value to -1
         updated_q_values = updated_q_values * (1 - done_sample) - done_sample
 
-        # Create a mask, so we only calculate loss on the updated Q-values
-        masks = tf.one_hot(action_sample, self.n_actions)
+        # Train the model on the states and updated Q-values
+        q_values = self.model(state_sample)
 
-        with tf.GradientTape() as tape:
-            # Train the model on the states and updated Q-values
-            q_values = self.model(state_sample)
-
-            # Apply the masks to the Q-values to get the Q-value for action taken
-            q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
-            # Calculate loss between new Q-value and old Q-value
-            loss = self.loss_function(updated_q_values, q_action)
+        # Apply the masks to the Q-values to get the Q-value for action taken
+        q_action = q_values.sum(1)
+        # Calculate loss between new Q-value and old Q-value
+        loss = self.loss_function(updated_q_values, q_action)
 
         # Backpropagation
-        grads = tape.gradient(loss, self.model.trainable_variables)
-        self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+        loss.backward()
+        self.optimizer.step()
 
         # Decay probability of taking random action
         self.epsilon *= self.epsilon_decay
@@ -115,12 +106,12 @@ class QAgent:
 
     def update_target_network(self):
         # update the target network with new weights
-        self.model_target.set_weights(self.model.get_weights())
+        self.model_target.load_state_dict(self.model.state_dict())
 
     def handle_mem(self):
-        # clear up memory by removing oldest experience
+        # clear up memory by removing the oldest experience
         self._memory.popleft()
 
     def save_network(self, filepath):
         # Save the network to the specified path
-        self.model.save(filepath)
+        torch.save(self.model.state_dict(), filepath)
