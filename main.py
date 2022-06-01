@@ -58,7 +58,7 @@ def main():
     batch_size = 32  # Size of batch taken from replay buffer
     # Note: The Deepmind paper Mnih et al. (2013) suggests 1000000 however this causes memory issues
     max_memory_length = 30000
-    agent = Agent.QAgent(n_actions, lr=0.00025, gamma=0.90, epsilon=1, epsilon_min=0.02,
+    agent = Agent.QAgent(n_actions, lr=0.00025, gamma=0.90, epsilon=1, epsilon_decay=0.99, epsilon_min=0.02,
                          epsilon_max=1.0, batch_size=batch_size, max_mem_length=max_memory_length)
 
     max_steps_per_episode = 10000
@@ -120,7 +120,6 @@ def main():
                 agent.handle_mem()
 
             if done or info['flag_get']:
-                print("Done!")
                 break
 
         # Update running reward to check condition for solving

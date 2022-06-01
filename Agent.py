@@ -6,15 +6,14 @@ from network import *
 
 
 class QAgent:
-    def __init__(self, n_actions, lr, gamma, epsilon, epsilon_min, epsilon_max, batch_size, max_mem_length):
+    def __init__(self, n_actions, lr, gamma, epsilon, epsilon_decay, epsilon_min, epsilon_max, batch_size, max_mem_length):
         self.n_actions = n_actions
         self.lr = lr  # learning rate for optimizer
         self.gamma = gamma  # Discount factor for past rewards
         self.epsilon = epsilon  # Epsilon greedy parameter
         self.epsilon_min = epsilon_min  # Minimum epsilon greedy parameter
         self.epsilon_max = epsilon_max  # Maximum epsilon greedy parameter
-        self.epsilon_interval = (
-                epsilon_max - epsilon_min)  # Rate at which to reduce chance of random action being taken
+        self.epsilon_decay = epsilon_decay  # Rate at which to reduce chance of random action being taken
         self.batch_size = batch_size
         self.epsilon_random_frames = 12000  # Number of frames for exploration
         self.epsilon_greedy_frames = 250000.0  # Maximum replay length
@@ -111,7 +110,7 @@ class QAgent:
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
         # Decay probability of taking random action
-        self.epsilon *= self.epsilon_interval
+        self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon, self.epsilon_min)
 
     def update_target_network(self):
