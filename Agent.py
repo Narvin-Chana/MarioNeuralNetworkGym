@@ -52,10 +52,6 @@ class QAgent:
             # Take best action
             action = tf.argmax(action_probs[0]).numpy()
 
-        # Decay probability of taking random action
-        self.epsilon -= self.epsilon_interval / self.epsilon_greedy_frames
-        self.epsilon = max(self.epsilon, self.epsilon_min)
-
         return action
 
     def remember(self, state, action, state_next, done, reward):
@@ -113,6 +109,10 @@ class QAgent:
         # Backpropagation
         grads = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+
+        # Decay probability of taking random action
+        self.epsilon *= self.epsilon_interval
+        self.epsilon = max(self.epsilon, self.epsilon_min)
 
     def update_target_network(self):
         # update the target network with new weights

@@ -128,7 +128,7 @@ def main():
         if len(episode_reward_history) > 100:
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
-        print(f"End of episode {episode_count}. Reward mean: {running_reward}")
+        print(f"End of episode {episode_count}. Episode reward: {episode_reward}. Reward mean: {running_reward}")
 
         # if running_reward > 500:  # Condition to consider the task solved
         #     print("Solved at episode {}!".format(episode_count))
