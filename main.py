@@ -23,7 +23,7 @@ print(env.observation_space)
 
 def play_with_trained_model():
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'model')
+    network_filepath = os.path.join(file_dir, 'models/06-08T11-52/BEST_MODEL')
     # Could be used if we already have partially trained the network and save an intermediary best
     best_model = keras.models.load_model(network_filepath)
 
@@ -34,9 +34,8 @@ def play_with_trained_model():
         env.render()
         if done:
             env.reset()
-        state_tensor = tf.convert_to_tensor(state)
-        state_tensor = tf.expand_dims(state_tensor, 0)
-        action_probs = best_model.predict(state_tensor)
+
+        action_probs = best_model.predict(tf.expand_dims(state, 0))
         # Take best action
         action = tf.argmax(action_probs[0]).numpy()
 
@@ -61,7 +60,7 @@ def main():
     batch_size = 32  # Size of batch taken from replay buffer
 
     # Note: The Deepmind paper Mnih et al. (2013) suggests 1000000 max_memory_length however this causes memory issues
-    max_memory_length = 100000
+    max_memory_length = 50000
     agent = Agent.QAgent(n_actions, lr=0.00025, gamma=0.95, epsilon=1, epsilon_decay=0.99, epsilon_min=0.01,
                          epsilon_max=1.0, batch_size=batch_size, max_mem_length=max_memory_length)
 
@@ -73,7 +72,7 @@ def main():
     frame_count = 0
 
     # Number of frames to take random action and observe output
-    max_episodes = 10
+    max_episodes = 2000
 
     # Train the model after 4 actions
     update_after_actions = 4
@@ -95,13 +94,13 @@ def main():
         for timestep in range(1, max_steps_per_episode):
             frame_count += 1
 
+            # env.render()
+
             action = agent.step(state, frame_count)
 
             # Apply the sampled action in our environment
             state_next, reward, done, info = env.step(action)
             state_next = np.transpose(state_next, (1, 2, 0))
-
-            env.render()
 
             episode_reward += reward
 
@@ -142,8 +141,6 @@ def main():
 
         print(f"End of episode {episode_count}. Episode reward: {episode_reward}. Reward mean: {running_reward}. Best "
               f"fitness: {best_fitness}")
-
-
 
     t1 = time.time()
 

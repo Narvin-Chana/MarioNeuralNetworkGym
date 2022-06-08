@@ -3,7 +3,7 @@ from tensorflow import keras
 from keras import layers, models, activations, regularizers, Model
 
 
-def build_nn(data_size_in, n_classes):
+def build_nn(data_size_in, n_classes, is_target):
     """
     Build a small convolutional neural network
     :param data_size_in: shape of the incoming observation space
@@ -22,16 +22,19 @@ def build_nn(data_size_in, n_classes):
     layer5 = layers.Dense(512, activation="relu")(layer4)
     action = layers.Dense(n_classes, activation="linear")(layer5)
 
+    if is_target:
+        action = tf.stop_gradient(action)
+
     return keras.Model(inputs=inputs, outputs=action)
 
 
-def set_up_nn(n_actions):
+def set_up_nn(n_actions, is_target):
     """
     Call to build a neural network
     :param n_actions: how many actions the network can output
     :return: constructed network
     """
     data_size_in = (84, 84, 4)
-    network = build_nn(data_size_in, n_actions)
+    network = build_nn(data_size_in, n_actions, is_target)
     print(network.summary())
     return network

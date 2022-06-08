@@ -20,8 +20,8 @@ class QAgent:
         self.batch_size = batch_size
         self.epsilon_random_frames = 12000  # Number of frames for exploration
         self.epsilon_greedy_frames = 250000.0  # Maximum replay length
-        self.model = set_up_nn(n_actions)
-        self.model_target = set_up_nn(n_actions)
+        self.model = set_up_nn(n_actions, is_target=False)
+        self.model_target = set_up_nn(n_actions, is_target=True)
         self._memory = deque(maxlen=max_mem_length)
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr, clipnorm=1.0)
         self.loss_function = tf.keras.losses.Huber()
@@ -52,7 +52,7 @@ class QAgent:
             state_tensor = tf.expand_dims(state_tensor, 0)
             action_probs = self.model.predict(state_tensor)
             # Take best action
-            action = tf.argmax(action_probs[0]).numpy()
+            action = tf.argmax(action_probs)
 
         return action
 
