@@ -135,5 +135,6 @@ class QAgent:
             model_path = os.path.join(filepath, f"EP{episode_count}")
         with open(model_path+".log", 'w+') as f:
             f.write(
-                f"Episode reward: {episode_reward}.\nReward mean: {running_reward}.\nBest fitness: {best_fitness}.\nCurrent elapsed time: {time.time() - t0}.")
+                f"Episode: {episode_count}\nEpisode reward: {episode_reward}.\nReward mean: {running_reward}.\nBest "
+                f"fitness: {best_fitness}.\nCurrent elapsed time: {time.time() - t0}.")
         self.save_network(model_path)
