@@ -1,23 +1,24 @@
 import os
 import time
 
-import gym
-import numpy as np
-from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
-import Agent
+import numpy as np
+from gym.wrappers import FrameStack, GrayScaleObservation, ResizeObservation
+from nes_py.wrappers import JoypadSpace
 
-import worldutils
-import worldview
-from wrappers import wrapper
+import Agent
 from network import *
+from wrappers import wrapper
 
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
+frameSkipCount = 4
+# Applies custom wrappers to the environment.
+env = wrapper(env, shape=84, skip=frameSkipCount)
+
 MOVEMENT = [['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left']]
 env = JoypadSpace(env, MOVEMENT)
-# Applies custom wrappers to the environment.
-frameSkipCount = 4
-env = wrapper(env, frameSkipCount)
+
+print(env.observation_space)
 
 
 def play_with_trained_model():
@@ -27,19 +28,18 @@ def play_with_trained_model():
     best_model = keras.models.load_model(network_filepath)
 
     done = True
+    state = env.reset()
     while True:
+        env.render()
         if done:
-            env.reset()
-        state = worldutils.get_simplified_world(env)
+            break
         state_tensor = tf.convert_to_tensor(state)
         state_tensor = tf.expand_dims(state_tensor, 0)
         action_probs = best_model.predict(state_tensor)
         # Take best action
         action = tf.argmax(action_probs[0]).numpy()
 
-        _, reward, done, info = env.step(action)
-
-        env.render()
+        state, reward, done, info = env.step(action)
 
     env.close()
 
@@ -56,9 +56,10 @@ def main():
     network_filepath = os.path.join(file_dir, 'model')
     n_actions = len(MOVEMENT)
     batch_size = 32  # Size of batch taken from replay buffer
-    # Note: The Deepmind paper Mnih et al. (2013) suggests 1000000 however this causes memory issues
-    max_memory_length = 30000
-    agent = Agent.QAgent(n_actions, lr=0.00025, gamma=0.90, epsilon=1, epsilon_decay=0.99, epsilon_min=0.02,
+
+    # Note: The Deepmind paper Mnih et al. (2013) suggests 1000000 max_memory_length however this causes memory issues
+    max_memory_length = 100000
+    agent = Agent.QAgent(n_actions, lr=0.00025, gamma=0.95, epsilon=1, epsilon_decay=0.99, epsilon_min=0.01,
                          epsilon_max=1.0, batch_size=batch_size, max_mem_length=max_memory_length)
 
     max_steps_per_episode = 10000
@@ -68,7 +69,7 @@ def main():
     frame_count = 0
 
     # Number of frames to take random action and observe output
-    max_episodes = 2000
+    max_episodes = 200
 
     # Train the model after 4 actions
     update_after_actions = 4
@@ -80,10 +81,9 @@ def main():
 
     for episode_count in range(max_episodes):
         print(f"Start of episode {episode_count}.")
-        env.reset()
+        state = env.reset()
+        state = np.transpose(state, (1, 2, 0))
         episode_reward = 0
-
-        state = worldutils.get_simplified_world(env)
 
         for timestep in range(1, max_steps_per_episode):
             frame_count += 1
@@ -91,12 +91,10 @@ def main():
             action = agent.step(state, frame_count)
 
             # Apply the sampled action in our environment
-            _, reward, done, info = env.step(action)
+            state_next, reward, done, info = env.step(action)
+            state_next = np.transpose(state_next, (1, 2, 0))
 
             env.render()
-            # viewer.render(state)
-
-            state_next = worldutils.get_simplified_world(env)
 
             episode_reward += reward
 
@@ -135,13 +133,11 @@ def main():
 
     t1 = time.time()
 
-    print("Time elapsed during execution: " + str(t1-t0))
+    print("Time elapsed during execution: " + str(t1 - t0))
 
     agent.save_network(network_filepath)
     env.close()
 
-
-# viewer = worldview.WorldViewer()
 
 main()
 

@@ -12,19 +12,17 @@ def build_nn(data_size_in, n_classes):
     """
     inputs = layers.Input(shape=data_size_in)
 
-    x_0 = layers.Conv2D(8, 2, strides=1, activation="relu")(inputs)
-    x_1 = layers.Conv2D(16, 3, strides=2, padding="same", activation="relu")(x_0)
-    x_2 = layers.Conv2D(16, 3, strides=2, activation="relu")(x_1)
+    # Convolutions on the frames on the screen
+    layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)
+    layer2 = layers.Conv2D(64, 4, strides=2, activation="relu")(layer1)
+    layer3 = layers.Conv2D(64, 3, strides=1, activation="relu")(layer2)
 
-    x_3 = layers.Conv2D(16, 1, activation="relu")(x_2)
-    x_4 = layers.Conv2D(2, 1, activation="relu")(x_3)
-    x = layers.Flatten()(x_4)
+    layer4 = layers.Flatten()(layer3)
 
-    dense = layers.Dense(n_classes, kernel_initializer="he_uniform")(x)
-    leak = layers.LeakyReLU()(dense)
-    last = layers.Softmax()(leak)
+    layer5 = layers.Dense(512, activation="relu")(layer4)
+    action = layers.Dense(n_classes, activation="linear")(layer5)
 
-    return Model(inputs=inputs, outputs=last)
+    return keras.Model(inputs=inputs, outputs=action)
 
 
 def set_up_nn(n_actions):
@@ -33,7 +31,7 @@ def set_up_nn(n_actions):
     :param n_actions: how many actions the network can output
     :return: constructed network
     """
-    data_size_in = (15, 16, 4)
+    data_size_in = (84, 84, 4)
     network = build_nn(data_size_in, n_actions)
     print(network.summary())
     return network
