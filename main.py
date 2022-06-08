@@ -78,6 +78,9 @@ def main():
     # Train the model after 4 actions
     update_after_actions = 4
 
+    # Determines the checkpoint saving frequency
+    save_after_episodes = 100
+
     # How often to update the target network
     update_target_network = 2500
 
@@ -134,12 +137,13 @@ def main():
             best_fitness = episode_reward
             agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0,
                                   is_best=True)
+        if episode_count % save_after_episodes == 0:
+            agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0)
 
         print(f"End of episode {episode_count}. Episode reward: {episode_reward}. Reward mean: {running_reward}. Best "
               f"fitness: {best_fitness}")
 
-        if episode_count % 2 == 0:
-            agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0)
+
 
     t1 = time.time()
 
