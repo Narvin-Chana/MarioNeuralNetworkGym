@@ -1,3 +1,5 @@
+import os
+import time
 from collections import deque
 
 import numpy as np
@@ -6,7 +8,8 @@ from network import *
 
 
 class QAgent:
-    def __init__(self, n_actions, lr, gamma, epsilon, epsilon_decay, epsilon_min, epsilon_max, batch_size, max_mem_length):
+    def __init__(self, n_actions, lr, gamma, epsilon, epsilon_decay, epsilon_min, epsilon_max, batch_size,
+                 max_mem_length):
         self.n_actions = n_actions
         self.lr = lr  # learning rate for optimizer
         self.gamma = gamma  # Discount factor for past rewards
@@ -124,3 +127,13 @@ class QAgent:
     def save_network(self, filepath):
         # Save the network to the specified path
         self.model.save(filepath)
+
+    def save_checkpoint(self, filepath, episode_count, episode_reward, running_reward, best_fitness, t0, is_best = False):
+        if is_best:
+            model_path = os.path.join(filepath, f"BEST_MODEL")
+        else:
+            model_path = os.path.join(filepath, f"EP{episode_count}")
+        with open(model_path+".log", 'w+') as f:
+            f.write(
+                f"Episode reward: {episode_reward}.\nReward mean: {running_reward}.\nBest fitness: {best_fitness}.\nCurrent elapsed time: {time.time() - t0}.")
+        self.save_network(model_path)

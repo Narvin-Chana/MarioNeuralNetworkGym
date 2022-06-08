@@ -1,9 +1,9 @@
+import datetime
 import os
 import time
 
 import gym_super_mario_bros
 import numpy as np
-from gym.wrappers import FrameStack, GrayScaleObservation, ResizeObservation
 from nes_py.wrappers import JoypadSpace
 
 import Agent
@@ -29,10 +29,11 @@ def play_with_trained_model():
 
     done = True
     state = env.reset()
+    state = np.transpose(state, (1, 2, 0))
     while True:
         env.render()
         if done:
-            break
+            env.reset()
         state_tensor = tf.convert_to_tensor(state)
         state_tensor = tf.expand_dims(state_tensor, 0)
         action_probs = best_model.predict(state_tensor)
@@ -40,6 +41,7 @@ def play_with_trained_model():
         action = tf.argmax(action_probs[0]).numpy()
 
         state, reward, done, info = env.step(action)
+        state = np.transpose(state, (1, 2, 0))
 
     env.close()
 
@@ -53,7 +55,8 @@ def main():
     known to the environment
     """
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'model')
+    network_filepath = os.path.join(file_dir, 'models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
+    os.makedirs(network_filepath)
     n_actions = len(MOVEMENT)
     batch_size = 32  # Size of batch taken from replay buffer
 
@@ -66,10 +69,11 @@ def main():
 
     episode_reward_history = []
     running_reward = 0
+    best_fitness = 0
     frame_count = 0
 
     # Number of frames to take random action and observe output
-    max_episodes = 200
+    max_episodes = 10
 
     # Train the model after 4 actions
     update_after_actions = 4
@@ -125,11 +129,17 @@ def main():
         if len(episode_reward_history) > 100:
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
-        print(f"End of episode {episode_count}. Episode reward: {episode_reward}. Reward mean: {running_reward}")
 
-        # if running_reward > 500:  # Condition to consider the task solved
-        #     print("Solved at episode {}!".format(episode_count))
-        #     break
+        if episode_reward > best_fitness:
+            best_fitness = episode_reward
+            agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0,
+                                  is_best=True)
+
+        print(f"End of episode {episode_count}. Episode reward: {episode_reward}. Reward mean: {running_reward}. Best "
+              f"fitness: {best_fitness}")
+
+        if episode_count % 2 == 0:
+            agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0)
 
     t1 = time.time()
 
