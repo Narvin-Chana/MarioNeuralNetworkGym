@@ -12,10 +12,11 @@ from wrappers import wrapper
 
 SAVE_INTERVAL = 10
 
-NB_GEN = 400
+NB_GEN = 1000
 NB_ACTIONS = 7
 CHECK_STEP = 60
-X_POS_THRESHOLD = 10
+X_POS_THRESHOLD = 50
+STANDING_PENALTY = 500
 
 CUSTOM_MOVEMENT = [["NOOP"], ["right", "A", "B"], ["right", "B"], ["left", "A", "B"], ["left", "B"]]
 
@@ -48,7 +49,7 @@ def evaluate_individual(genome, config):
         current_step += 1
         env.render()
 
-    return total_reward,
+    return total_reward
 
 
 def run(config_file):
@@ -72,6 +73,7 @@ def run(config_file):
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
 
+    return winner
     # visualize.draw_net(config, winner, True, node_names=node_names)
     # visualize.draw_net(config, winner, True, node_names=node_names, prune_unused=True)
     # visualize.plot_stats(stats, ylog=False, view=True)
@@ -84,4 +86,6 @@ if __name__ == '__main__':
     # current working directory.
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, 'config-feedforward')
-    run(config_path)
+    winner = run(config_path)
+    with open(os.path.join(local_dir, "../results", "neat.ind"), "w") as fw:
+        fw.write(str(winner))

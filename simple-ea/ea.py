@@ -15,7 +15,7 @@ import gym_super_mario_bros
 
 from wrappers import wrapper
 
-SAVE_INTERVAL = 10
+SAVE_INTERVAL = 1
 
 NB_GEN = 400
 POP_SIZE = 80
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     from numpy import random
     import pickle
 
-    RESULTS_DIR = "./results/{0}/"
+    RESULTS_DIR = "results/{0}/"
     result_name = datetime.datetime.now().strftime("%H-%M-%S")
 
     dir_name = RESULTS_DIR.format(result_name)
