@@ -23,25 +23,27 @@ print(env.observation_space)
 
 def play_with_trained_model():
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'models/06-08T11-52/BEST_MODEL')
+    network_filepath = os.path.join(file_dir, 'models/06-08T17-54/BEST_MODEL')
     # Could be used if we already have partially trained the network and save an intermediary best
     best_model = keras.models.load_model(network_filepath)
 
-    done = True
+    done = False
     state = env.reset()
     state = np.transpose(state, (1, 2, 0))
-    while True:
+    total_reward = 0
+    while not done:
         env.render()
         if done:
             env.reset()
 
-        action_probs = best_model.predict(tf.expand_dims(state, 0))
+        action_probs = best_model(tf.expand_dims(state, 0))
         # Take best action
         action = tf.argmax(action_probs[0]).numpy()
 
         state, reward, done, info = env.step(action)
         state = np.transpose(state, (1, 2, 0))
-
+        total_reward += reward
+        print(f"Current total reward: {total_reward}")
     env.close()
 
 
@@ -94,7 +96,7 @@ def main():
         for timestep in range(1, max_steps_per_episode):
             frame_count += 1
 
-            # env.render()
+            env.render()
 
             action = agent.step(state, frame_count)
 

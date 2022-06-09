@@ -50,9 +50,9 @@ class QAgent:
             # From environment state
             state_tensor = tf.convert_to_tensor(state)
             state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = self.model.predict(state_tensor)
+            action_probs = self.model(state_tensor)[0]
             # Take best action
-            action = tf.argmax(action_probs)
+            action = tf.argmax(action_probs).numpy()
 
         return action
 
