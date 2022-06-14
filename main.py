@@ -23,7 +23,7 @@ print(env.observation_space)
 
 def play_with_trained_model():
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'models/06-08T17-54/BEST_MODEL')
+    network_filepath = os.path.join(file_dir, 'models/06-09T17-46')
     # Could be used if we already have partially trained the network and save an intermediary best
     best_model = keras.models.load_model(network_filepath)
 
@@ -74,7 +74,7 @@ def main():
     frame_count = 0
 
     # Number of frames to take random action and observe output
-    max_episodes = 2000
+    max_episodes = 10000
 
     # Train the model after 4 actions
     update_after_actions = 4

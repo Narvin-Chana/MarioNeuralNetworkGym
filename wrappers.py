@@ -123,44 +123,6 @@ class FrameStack(ObservationWrapper):
             return self.observation()
 
 
-class EpisodicLifeEnv(gym.Wrapper):
-    def __init__(self, env):
-        """Make end-of-life == end-of-episode
-        """
-        gym.Wrapper.__init__(self, env)
-
-    def step(self, action):
-        obs, reward, done, info = self.env.step(action)
-        if self.env.unwrapped._is_game_over or info["time"] == 0:
-            # Also checks for if the player is dead
-            done = True
-        return obs, reward, done, info
-
-    def reset(self, **kwargs):
-        """Reset only when lives are exhausted.
-        This way all states are still reachable even though lives are episodic,
-        and the learner need not know about any of this behind-the-scenes.
-        """
-        obs = self.env.reset(**kwargs)
-        return obs
-
-
-class OneLife(gym.Wrapper):
-    def __init__(self, env):
-        """Make end-of-life == end-of-episode
-        """
-        gym.Wrapper.__init__(self, env)
-        self.set_lives_to_zero()
-
-    def set_lives_to_zero(self):
-        self.env.ram[0x075a] = 1
-
-    def reset(self, **kwargs):
-        obs = self.env.reset(**kwargs)
-        self.set_lives_to_zero()
-        return obs
-
-
 def wrapper(env, shape, skip):
     """Apply a common set of wrappers for games."""
     env = SkipFrame(env, skip)
@@ -168,6 +130,5 @@ def wrapper(env, shape, skip):
     env = ResizeObservation(env, shape)
     env = TransformObservation(env, f=lambda x: x / 255.)
     env = FrameStack(env, skip)
-    env = EpisodicLifeEnv(env)
-    env = OneLife(env)
+
     return env
