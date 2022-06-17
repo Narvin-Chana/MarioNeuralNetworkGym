@@ -87,26 +87,27 @@ class QAgent:
 
         # Build the updated Q-values for the sampled future states
         # Use the target model for stability
-        q_estimate = self.model(state_sample, training=True)
-        q_estimate = [q_estimate[i, action_sample[i]] for i in range(self.batch_size)]
+        action_probs = self.model(state_next_sample, training=False)
+        # Take best action
+        best_action = tf.argmax(action_probs, axis=1).numpy()
+
+        next_q = self.model_target(state_next_sample, training=False)
+        next_q = tf.convert_to_tensor([next_q[i, best_action[i]] for i in range(self.batch_size)])
+
+        q_target = rewards_sample + (1 - done_sample) * self.gamma * next_q
+
         # Q value = reward + discount factor * expected future reward
 
         with tf.GradientTape() as tape:
-            action_probs = self.model(state_next_sample, training=False)
-            # Take best action
-            best_action = tf.argmax(action_probs, axis=1).numpy()
+            q_estimate = self.model(state_sample)
+            q_estimate = tf.convert_to_tensor([q_estimate[i, action_sample[i]] for i in range(self.batch_size)])
 
-            next_q = self.model_target(state_next_sample, training=False)
-            next_q = [next_q[i, best_action[i]] for i in range(self.batch_size)]
-
-            q_target = rewards_sample + (1 - done_sample) * self.gamma * next_q
             # Calculate loss between new Q-value and old Q-value
-
             loss = self.loss_function(q_target, q_estimate)
 
-            # Backpropagation
-            grads = tape.gradient(loss, self.model.trainable_variables)
-            self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+        # Backpropagation
+        grads = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
         # Decay probability of taking random action
         self.epsilon *= self.epsilon_decay
