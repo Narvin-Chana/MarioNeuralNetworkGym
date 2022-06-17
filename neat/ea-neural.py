@@ -1,8 +1,11 @@
 import multiprocessing
+import pickle
+import time
+
 import worldutils
 import os
 import neat
-import numpy
+import numpy as np
 
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
@@ -12,7 +15,7 @@ from wrappers import wrapper
 
 SAVE_INTERVAL = 10
 
-NB_GEN = 1000
+NB_GEN = 4
 NB_ACTIONS = 7
 CHECK_STEP = 60
 X_POS_THRESHOLD = 50
@@ -24,7 +27,19 @@ env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 env = JoypadSpace(env, SIMPLE_MOVEMENT)
 # Applies custom wrappers to the environment.
 frameSkipCount = 4
-env = wrapper(env, frameSkipCount)
+env = wrapper(env, 84, frameSkipCount)
+
+
+class TimeReporter(neat.reporting.BaseReporter):
+    def __init__(self, start):
+        self.start = start
+        self.time_values = []
+
+    def post_evaluate(self, config, population, species, best_genome):
+        self.time_values.append(time.time() - self.start)
+
+    def get_time_values(self):
+        return self.time_values
 
 
 def evaluate_individual(genome, config):
@@ -40,7 +55,7 @@ def evaluate_individual(genome, config):
 
         state = worldutils.get_simplified_world(env)
         state = state.flatten()
-        action = numpy.argmax(net.activate(state))
+        action = np.argmax(net.activate(state))
         _, reward, d, info = env.step(action)
         if current_step >= CHECK_STEP and info["x_pos"] < X_POS_THRESHOLD:
             break
@@ -66,6 +81,9 @@ def run(config_file):
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
 
+    timer = TimeReporter(time.time())
+    p.add_reporter(timer)
+
     # Run for up to 300 generations.
     pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), evaluate_individual)
     winner = p.run(pe.evaluate, NB_GEN)
@@ -73,7 +91,7 @@ def run(config_file):
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
 
-    return winner
+    return winner, stats, timer
     # visualize.draw_net(config, winner, True, node_names=node_names)
     # visualize.draw_net(config, winner, True, node_names=node_names, prune_unused=True)
     # visualize.plot_stats(stats, ylog=False, view=True)
@@ -86,6 +104,8 @@ if __name__ == '__main__':
     # current working directory.
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, 'config-feedforward')
-    winner = run(config_path)
-    with open(os.path.join(local_dir, "../results", "neat.ind"), "w") as fw:
+    winner, stats, timer = run(config_path)
+    with open(os.path.join(local_dir, "../results", "neat", "neat.ind"), "w") as fw:
         fw.write(str(winner))
+    with open(os.path.join(local_dir, "../results", "neat", "stats.dat"), "wb") as fw:
+        pickle.dump([stats.get_fitness_stat(np.min), stats.get_fitness_stat(np.max), stats.get_fitness_stat(np.max), stats.get_fitness_stat(np.std), timer.get_time_values()], fw)

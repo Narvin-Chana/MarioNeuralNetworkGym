@@ -1,5 +1,6 @@
 import datetime
 import os
+import pickle
 import time
 
 import gym_super_mario_bros
@@ -31,7 +32,7 @@ def play_with_trained_model():
     state = env.reset()
     state = np.transpose(state, (1, 2, 0))
     total_reward = 0
-    while not done:
+    while True:
         env.render()
         if done:
             env.reset()
@@ -55,6 +56,8 @@ def main():
     Currently, network returns sampled numbers which still need to be translated to the actions
     known to the environment
     """
+    time_values = []
+
     file_dir = os.getcwd()
     network_filepath = os.path.join(file_dir, 'models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
     os.makedirs(network_filepath)
@@ -134,6 +137,8 @@ def main():
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
 
+        time_values.append(time.time() - t0)
+
         if episode_reward > best_fitness:
             best_fitness = episode_reward
             agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0,
@@ -144,7 +149,12 @@ def main():
         print(f"End of episode {episode_count}. Episode reward: {episode_reward}. Reward mean: {running_reward}. Best "
               f"fitness: {best_fitness}")
 
+        with open(os.path.join("results", "qlearning-stats.dat"), "wb") as fw:
+            pickle.dump([episode_reward_history, time_values], fw)
+
     t1 = time.time()
+
+
 
     print("Time elapsed during execution: " + str(t1 - t0))
 
@@ -152,6 +162,6 @@ def main():
     env.close()
 
 
-main()
+# main()
 
-# play_with_trained_model()
+play_with_trained_model()
