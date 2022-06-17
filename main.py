@@ -162,6 +162,6 @@ def main():
     env.close()
 
 
-# main()
+main()
 
-play_with_trained_model()
+# play_with_trained_model()
