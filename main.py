@@ -57,6 +57,7 @@ def main():
     known to the environment
     """
     time_values = []
+    episode_rewards_full = []
 
     file_dir = os.getcwd()
     network_filepath = os.path.join(file_dir, 'models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
@@ -137,6 +138,8 @@ def main():
 
         # Update running reward to check condition for solving
         episode_reward_history.append(episode_reward)
+        episode_rewards_full.append(episode_reward)
+
         if len(episode_reward_history) > 100:
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
@@ -154,7 +157,7 @@ def main():
               f"fitness: {best_fitness}")
 
         with open(os.path.join("results", "qlearning-stats.dat"), "wb") as fw:
-            pickle.dump([episode_reward_history, time_values], fw)
+            pickle.dump([episode_rewards_full, time_values], fw)
 
     t1 = time.time()
 
