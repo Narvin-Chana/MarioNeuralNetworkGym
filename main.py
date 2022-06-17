@@ -24,7 +24,7 @@ print(env.observation_space)
 
 def play_with_trained_model():
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'models/06-09T17-46')
+    network_filepath = os.path.join(file_dir, 'models/06-10T00-19/EP1100')
     # Could be used if we already have partially trained the network and save an intermediary best
     best_model = keras.models.load_model(network_filepath)
 
@@ -44,7 +44,7 @@ def play_with_trained_model():
         state, reward, done, info = env.step(action)
         state = np.transpose(state, (1, 2, 0))
         total_reward += reward
-        print(f"Current total reward: {total_reward}")
+        # print(f"Current total reward: {total_reward}")
     env.close()
 
 
@@ -61,6 +61,7 @@ def main():
     file_dir = os.getcwd()
     network_filepath = os.path.join(file_dir, 'models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
     os.makedirs(network_filepath)
+    os.makedirs(os.path.join(file_dir, 'results'))
     n_actions = len(MOVEMENT)
     batch_size = 32  # Size of batch taken from replay buffer
 
@@ -77,7 +78,7 @@ def main():
     frame_count = 0
 
     # Number of frames to take random action and observe output
-    max_episodes = 10000
+    max_episodes = 1000000
 
     # Train the model after 4 actions
     update_after_actions = 4
@@ -91,6 +92,9 @@ def main():
     t0 = time.time()
 
     for episode_count in range(max_episodes):
+        if time.time() - t0 > 20*60*60:
+            break
+
         print(f"Start of episode {episode_count}.")
         state = env.reset()
         state = np.transpose(state, (1, 2, 0))
@@ -121,7 +125,7 @@ def main():
                 # update the target network with new weights
                 agent.update_target_network()
                 # Log details
-                template = "running reward: {:.2f} at episode {}, frame count {}"
+                template = "Updated target network at episode {}, frame count {}"
                 print(template.format(running_reward, episode_count, frame_count))
 
             # Limit the state and reward history
@@ -152,9 +156,8 @@ def main():
         with open(os.path.join("results", "qlearning-stats.dat"), "wb") as fw:
             pickle.dump([episode_reward_history, time_values], fw)
 
+
     t1 = time.time()
-
-
 
     print("Time elapsed during execution: " + str(t1 - t0))
 
