@@ -20,7 +20,7 @@ def build_nn(data_size_in, n_classes, is_target):
     layer4 = layers.Flatten()(layer3)
 
     layer5 = layers.Dense(512, activation="relu")(layer4)
-    action = layers.Dense(n_classes, activation="linear")(layer5)
+    action = layers.Dense(n_classes, activation="softmax")(layer5)
 
     if is_target:
         action = tf.stop_gradient(action)
