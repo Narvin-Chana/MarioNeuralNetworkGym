@@ -19,8 +19,6 @@ env = wrapper(env, shape=84, skip=frameSkipCount)
 MOVEMENT = [['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left']]
 env = JoypadSpace(env, MOVEMENT)
 
-print(env.observation_space)
-
 
 def play_with_trained_model():
     file_dir = os.getcwd()
@@ -118,8 +116,8 @@ def main():
             agent.remember(state, action, state_next, done, reward)
 
             state = state_next
-            # Update every fourth frame and once batch size is over 32
-            if frame_count % update_after_actions == 0 and len(agent.memory) > batch_size:
+            # Update once batch size is over 32
+            if len(agent.memory) > batch_size:
                 agent.update()
 
             if frame_count % update_target_network == 0:
@@ -133,7 +131,7 @@ def main():
             if len(agent.memory) > max_memory_length:
                 agent.handle_mem()
 
-            if done or info['flag_get']:
+            if done:
                 break
 
         # Update running reward to check condition for solving
@@ -141,7 +139,7 @@ def main():
         episode_rewards_full.append(episode_reward)
 
         if len(episode_reward_history) > 100:
-            del episode_reward_history[:1]
+            del episode_reward_history[0]
         running_reward = np.mean(episode_reward_history)
 
         time_values.append(time.time() - t0)

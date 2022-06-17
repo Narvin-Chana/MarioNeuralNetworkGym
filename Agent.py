@@ -50,7 +50,7 @@ class QAgent:
             # From environment state
             state_tensor = tf.convert_to_tensor(state)
             state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = self.model(state_tensor)[0]
+            action_probs = self.model(state_tensor, training=False)[0]
             # Take best action
             action = tf.argmax(action_probs).numpy()
 
@@ -87,30 +87,26 @@ class QAgent:
 
         # Build the updated Q-values for the sampled future states
         # Use the target model for stability
-        future_rewards = self.model_target.predict(state_next_sample)
+        q_estimate = self.model(state_sample, training=True)
+        q_estimate = [q_estimate[i, action_sample[i]] for i in range(self.batch_size)]
         # Q value = reward + discount factor * expected future reward
-        updated_q_values = rewards_sample + self.gamma * tf.reduce_max(
-            future_rewards, axis=1
-        )
-
-        # If final frame set the last value to -1
-        updated_q_values = updated_q_values * (1 - done_sample) - done_sample
-
-        # Create a mask, so we only calculate loss on the updated Q-values
-        masks = tf.one_hot(action_sample, self.n_actions)
 
         with tf.GradientTape() as tape:
-            # Train the model on the states and updated Q-values
-            q_values = self.model(state_sample)
+            action_probs = self.model(state_next_sample, training=False)
+            # Take best action
+            best_action = tf.argmax(action_probs, axis=1).numpy()
 
-            # Apply the masks to the Q-values to get the Q-value for action taken
-            q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
+            next_q = self.model_target(state_next_sample, training=False)
+            next_q = [next_q[i, best_action[i]] for i in range(self.batch_size)]
+
+            q_target = rewards_sample + (1 - done_sample) * self.gamma * next_q
             # Calculate loss between new Q-value and old Q-value
-            loss = self.loss_function(updated_q_values, q_action)
 
-        # Backpropagation
-        grads = tape.gradient(loss, self.model.trainable_variables)
-        self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+            loss = self.loss_function(q_target, q_estimate)
+
+            # Backpropagation
+            grads = tape.gradient(loss, self.model.trainable_variables)
+            self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
         # Decay probability of taking random action
         self.epsilon *= self.epsilon_decay
@@ -128,12 +124,12 @@ class QAgent:
         # Save the network to the specified path
         self.model.save(filepath)
 
-    def save_checkpoint(self, filepath, episode_count, episode_reward, running_reward, best_fitness, t0, is_best = False):
+    def save_checkpoint(self, filepath, episode_count, episode_reward, running_reward, best_fitness, t0, is_best=False):
         if is_best:
             model_path = os.path.join(filepath, f"BEST_MODEL")
         else:
             model_path = os.path.join(filepath, f"EP{episode_count}")
-        with open(model_path+".log", 'w+') as f:
+        with open(model_path + ".log", 'w+') as f:
             f.write(
                 f"Episode: {episode_count}\nEpisode reward: {episode_reward}.\nReward mean: {running_reward}.\nBest "
                 f"fitness: {best_fitness}.\nCurrent elapsed time: {time.time() - t0}.")
