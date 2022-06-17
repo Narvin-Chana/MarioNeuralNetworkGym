@@ -61,7 +61,7 @@ def main():
     file_dir = os.getcwd()
     network_filepath = os.path.join(file_dir, 'models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
     os.makedirs(network_filepath)
-    os.makedirs(os.path.join(file_dir, 'results'))
+    os.makedirs(os.path.join(file_dir, 'results'), exist_ok=True)
     n_actions = len(MOVEMENT)
     batch_size = 32  # Size of batch taken from replay buffer
 
@@ -92,7 +92,7 @@ def main():
     t0 = time.time()
 
     for episode_count in range(max_episodes):
-        if time.time() - t0 > 20*60*60:
+        if time.time() - t0 > 20 * 60 * 60:
             break
 
         print(f"Start of episode {episode_count}.")
@@ -155,7 +155,6 @@ def main():
 
         with open(os.path.join("results", "qlearning-stats.dat"), "wb") as fw:
             pickle.dump([episode_reward_history, time_values], fw)
-
 
     t1 = time.time()
 
