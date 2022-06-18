@@ -79,14 +79,11 @@ def main():
     # Number of frames to take random action and observe output
     max_episodes = 1000000
 
-    # Train the model after 4 actions
-    update_after_actions = 4
-
     # Determines the checkpoint saving frequency
     save_after_episodes = 100
 
     # How often to update the target network
-    update_target_network = 2500
+    update_target_network = 1e4
 
     t0 = time.time()
 
@@ -117,7 +114,7 @@ def main():
 
             state = state_next
             # Update once batch size is over 32
-            if len(agent.memory) > batch_size:
+            if len(agent.memory) >= batch_size:
                 agent.update()
 
             if frame_count % update_target_network == 0:
@@ -125,7 +122,7 @@ def main():
                 agent.update_target_network()
                 # Log details
                 template = "Updated target network at episode {}, frame count {}"
-                print(template.format(running_reward, episode_count, frame_count))
+                print(template.format(episode_count, frame_count))
 
             # Limit the state and reward history
             if len(agent.memory) > max_memory_length:
@@ -146,8 +143,8 @@ def main():
 
         if episode_reward > best_fitness:
             best_fitness = episode_reward
-            agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0,
-                                  is_best=True)
+            # agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0,
+            #                       is_best=True)
         if episode_count % save_after_episodes == 0:
             agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0)
 

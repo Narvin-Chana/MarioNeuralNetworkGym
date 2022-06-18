@@ -50,7 +50,7 @@ class QAgent:
             # From environment state
             state_tensor = tf.convert_to_tensor(state)
             state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = self.model(state_tensor, training=False)[0]
+            action_probs = self.model(state_tensor)[0]
             # Take best action
             action = tf.argmax(action_probs).numpy()
 
@@ -86,12 +86,11 @@ class QAgent:
         )
 
         # Build the updated Q-values for the sampled future states
-        # Use the target model for stability
-        action_probs = self.model(state_next_sample, training=False)
+        action_probs = self.model(state_next_sample)
         # Take best action
         best_action = tf.argmax(action_probs, axis=1).numpy()
 
-        next_q = self.model_target(state_next_sample, training=False)
+        next_q = self.model_target(state_next_sample)
         next_q = tf.convert_to_tensor([next_q[i, best_action[i]] for i in range(self.batch_size)])
 
         q_target = rewards_sample + (1 - done_sample) * self.gamma * next_q
