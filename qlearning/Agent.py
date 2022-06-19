@@ -117,18 +117,16 @@ class QAgent:
         self.model_target.set_weights(self.model.get_weights())
 
     def handle_mem(self):
-        # clear up memory by removing oldest experience
+        # clear up memory by removing the oldest experience
         self._memory.popleft()
 
     def save_network(self, filepath):
         # Save the network to the specified path
         self.model.save(filepath)
 
-    def save_checkpoint(self, filepath, episode_count, episode_reward, running_reward, best_fitness, t0, is_best=False):
-        if is_best:
-            model_path = os.path.join(filepath, f"BEST_MODEL")
-        else:
-            model_path = os.path.join(filepath, f"EP{episode_count}")
+    def save_checkpoint(self, filepath, episode_count, episode_reward, running_reward, best_fitness, t0):
+        # Saves a checkpoint (also generates a .log file but otherwise is functionally identical to self.save_network())
+        model_path = os.path.join(filepath, f"EP{episode_count}")
         with open(model_path + ".log", 'w+') as f:
             f.write(
                 f"Episode: {episode_count}\nEpisode reward: {episode_reward}.\nReward mean: {running_reward}.\nBest "
