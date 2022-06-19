@@ -48,23 +48,19 @@ def play_with_trained_model():
 
 def main():
     """
-    An example pipeline of applying Q learning.
-    Retrieved largely from: https://keras.io/examples/rl/deep_q_network_breakout/
-    There are more techniques of course.
-    Currently, network returns sampled numbers which still need to be translated to the actions
-    known to the environment
+    Main loop for Q-learning
     """
     time_values = []
     episode_rewards_full = []
 
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
+    network_filepath = os.path.join(file_dir, 'Q-learning/models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
     os.makedirs(network_filepath)
-    os.makedirs(os.path.join(file_dir, 'results'), exist_ok=True)
+    os.makedirs(os.path.join(file_dir, 'Q-learning/results'), exist_ok=True)
     n_actions = len(MOVEMENT)
     batch_size = 32  # Size of batch taken from replay buffer
 
-    # Note: The Deepmind paper Mnih et al. (2013) suggests 1000000 max_memory_length however this causes memory issues
+    # max_memory_length to avoid memory issues
     max_memory_length = 50000
     agent = Agent.QAgent(n_actions, lr=0.00025, gamma=0.95, epsilon=1, epsilon_decay=0.99, epsilon_min=0.01,
                          epsilon_max=1.0, batch_size=batch_size, max_mem_length=max_memory_length)
@@ -151,7 +147,7 @@ def main():
         print(f"End of episode {episode_count}. Episode reward: {episode_reward}. Reward mean: {running_reward}. Best "
               f"fitness: {best_fitness}")
 
-        with open(os.path.join("results", "qlearning-stats.dat"), "wb") as fw:
+        with open(os.path.join("../results", "qlearning-stats.dat"), "wb") as fw:
             pickle.dump([episode_rewards_full, time_values], fw)
 
     t1 = time.time()
