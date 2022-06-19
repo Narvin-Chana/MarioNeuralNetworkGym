@@ -12,7 +12,7 @@ from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 
-from wrappers import wrapper
+from qlearning.wrappers import wrapper
 
 SAVE_INTERVAL = 10
 
