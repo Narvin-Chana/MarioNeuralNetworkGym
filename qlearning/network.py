@@ -6,6 +6,7 @@ from keras import layers, models, activations, regularizers, Model
 def build_nn(data_size_in, n_classes, is_target):
     """
     Build a small convolutional neural network
+    :param is_target: determines if the generated network should allow for gradient computation
     :param data_size_in: shape of the incoming observation space
     :param n_classes: how many outputs the network produces
     :return: network
@@ -31,10 +32,12 @@ def build_nn(data_size_in, n_classes, is_target):
 def set_up_nn(n_actions, is_target):
     """
     Call to build a neural network
+    :param is_target: determines if the generated network should allow for gradient computation
     :param n_actions: how many actions the network can output
     :return: constructed network
     """
     data_size_in = (84, 84, 4)
     network = build_nn(data_size_in, n_actions, is_target)
-    print(network.summary())
+    if not is_target:
+        print(network.summary())
     return network
