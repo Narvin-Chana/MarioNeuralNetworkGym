@@ -17,16 +17,16 @@ from wrappers import wrapper
 
 SAVE_INTERVAL = 1
 
-NB_GEN = 400
-POP_SIZE = 80
+NB_GEN = 400000
+POP_SIZE = 50
 IND_SIZE = 3000
 NB_ACTIONS = 5
 
-IND_CROSSOVER_RATE = 0.5
-IND_MUTATION_RATE = 0.2
-GENE_MUTATION_RATE = 100 / IND_SIZE
+IND_CROSSOVER_RATE = 0.05
+IND_MUTATION_RATE = 1
+GENE_MUTATION_RATE = 0.01
 
-SELECT_SIZE = 10
+SELECT_SIZE = 5
 
 CUSTOM_MOVEMENT = [["NOOP"], ["right", "A", "B"], ["right", "B"], ["left", "A", "B"], ["left", "B"]]
 
@@ -34,7 +34,7 @@ env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 env = JoypadSpace(env, CUSTOM_MOVEMENT)
 # Applies custom wrappers to the environment.
 frameSkipCount = 4
-env = wrapper(env, frameSkipCount)
+env = wrapper(env, 84, frameSkipCount)
 
 
 def evaluate_individual(ind):
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     toolbox.register("mate", tools.cxOnePoint)
     toolbox.register("mutate", tools.mutUniformInt, low=0, up=NB_ACTIONS - 1, indpb=GENE_MUTATION_RATE)
-    toolbox.register("select", tools.selRoulette)
+    toolbox.register("select", tools.selTournament, tournsize=SELECT_SIZE)
     toolbox.register("evaluate", evaluate_individual)
     toolbox.register("map", futures.map)
 

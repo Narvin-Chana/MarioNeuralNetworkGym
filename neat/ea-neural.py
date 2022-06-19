@@ -1,3 +1,4 @@
+import copy
 import multiprocessing
 import pickle
 import time
@@ -15,7 +16,7 @@ from wrappers import wrapper
 
 SAVE_INTERVAL = 10
 
-NB_GEN = 4
+NB_GEN = None
 NB_ACTIONS = 7
 CHECK_STEP = 60
 X_POS_THRESHOLD = 50
@@ -29,14 +30,30 @@ env = JoypadSpace(env, SIMPLE_MOVEMENT)
 frameSkipCount = 4
 env = wrapper(env, 84, frameSkipCount)
 
-
-class TimeReporter(neat.reporting.BaseReporter):
+class StatisticsReporterSave(neat.StatisticsReporter):
     def __init__(self, start):
+        super().__init__()
+
         self.start = start
         self.time_values = []
 
     def post_evaluate(self, config, population, species, best_genome):
         self.time_values.append(time.time() - self.start)
+        self.most_fit_genomes.append(copy.deepcopy(best_genome))
+
+        # Store the fitnesses of the members of each currently active species.
+        species_stats = {}
+        for sid, s in species.species.items():
+            species_stats[sid] = dict((k, v.fitness) for k, v in s.members.items())
+        self.generation_statistics.append(species_stats)
+        self.save()
+
+    def save(self):
+        with open(os.path.join(local_dir, "../results", "neat", "neat.ind"), "w") as fw:
+            fw.write(str(self.best_genome()))
+        with open(os.path.join(local_dir, "../results", "neat", "stats.dat"), "wb") as fw:
+            pickle.dump([self.get_fitness_stat(np.min), self.get_fitness_stat(np.max), self.get_fitness_stat(np.max),
+                         self.get_fitness_stat(np.std), self.get_time_values()], fw)
 
     def get_time_values(self):
         return self.time_values
@@ -51,12 +68,13 @@ def evaluate_individual(genome, config):
     total_reward = 0
     done = False
 
-    while not done:
+    state = env.reset()
 
-        state = worldutils.get_simplified_world(env)
-        state = state.flatten()
+    while not done:
+        state = np.ravel(state)
         action = np.argmax(net.activate(state))
-        _, reward, d, info = env.step(action)
+        state, reward, d, info = env.step(action)
+
         if current_step >= CHECK_STEP and info["x_pos"] < X_POS_THRESHOLD:
             break
         total_reward += reward
@@ -78,10 +96,8 @@ def run(config_file):
 
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    p.add_reporter(stats)
 
-    timer = TimeReporter(time.time())
+    timer = StatisticsReporterSave(time.time())
     p.add_reporter(timer)
 
     # Run for up to 300 generations.
@@ -105,7 +121,3 @@ if __name__ == '__main__':
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, 'config-feedforward')
     winner, stats, timer = run(config_path)
-    with open(os.path.join(local_dir, "../results", "neat", "neat.ind"), "w") as fw:
-        fw.write(str(winner))
-    with open(os.path.join(local_dir, "../results", "neat", "stats.dat"), "wb") as fw:
-        pickle.dump([stats.get_fitness_stat(np.min), stats.get_fitness_stat(np.max), stats.get_fitness_stat(np.max), stats.get_fitness_stat(np.std), timer.get_time_values()], fw)
