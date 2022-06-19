@@ -1,5 +1,6 @@
 import datetime
 import os
+import pickle
 import time
 
 import gym_super_mario_bros
@@ -23,7 +24,7 @@ print(env.observation_space)
 
 def play_with_trained_model():
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'models/06-09T17-46')
+    network_filepath = os.path.join(file_dir, 'models/06-10T00-19/EP1100')
     # Could be used if we already have partially trained the network and save an intermediary best
     best_model = keras.models.load_model(network_filepath)
 
@@ -31,7 +32,7 @@ def play_with_trained_model():
     state = env.reset()
     state = np.transpose(state, (1, 2, 0))
     total_reward = 0
-    while not done:
+    while True:
         env.render()
         if done:
             env.reset()
@@ -43,7 +44,7 @@ def play_with_trained_model():
         state, reward, done, info = env.step(action)
         state = np.transpose(state, (1, 2, 0))
         total_reward += reward
-        print(f"Current total reward: {total_reward}")
+        # print(f"Current total reward: {total_reward}")
     env.close()
 
 
@@ -55,9 +56,13 @@ def main():
     Currently, network returns sampled numbers which still need to be translated to the actions
     known to the environment
     """
+    time_values = []
+    episode_rewards_full = []
+
     file_dir = os.getcwd()
     network_filepath = os.path.join(file_dir, 'models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
-    os.makedirs(network_filepath)
+    os.makedirs(network_filepath, exist_ok=True)
+    os.makedirs(os.path.join(file_dir, 'results'), exist_ok=True)
     n_actions = len(MOVEMENT)
     batch_size = 32  # Size of batch taken from replay buffer
 
@@ -74,7 +79,7 @@ def main():
     frame_count = 0
 
     # Number of frames to take random action and observe output
-    max_episodes = 10000
+    max_episodes = 1000000
 
     # Train the model after 4 actions
     update_after_actions = 4
@@ -88,6 +93,9 @@ def main():
     t0 = time.time()
 
     for episode_count in range(max_episodes):
+        if time.time() - t0 > 10*60*60:
+            break
+
         print(f"Start of episode {episode_count}.")
         state = env.reset()
         state = np.transpose(state, (1, 2, 0))
@@ -111,28 +119,32 @@ def main():
 
             state = state_next
             # Update every fourth frame and once batch size is over 32
-            if frame_count % update_after_actions == 0 and len(agent.memory) > batch_size:
+            if len(agent.memory) > batch_size:
                 agent.update()
 
             if frame_count % update_target_network == 0:
                 # update the target network with new weights
                 agent.update_target_network()
                 # Log details
-                template = "running reward: {:.2f} at episode {}, frame count {}"
-                print(template.format(running_reward, episode_count, frame_count))
+                template = "Updated target network at episode {}, frame count {}"
+                print(template.format(episode_count, frame_count))
 
             # Limit the state and reward history
             if len(agent.memory) > max_memory_length:
                 agent.handle_mem()
 
-            if done or info['flag_get']:
-                break
+            # if done or info['flag_get']:
+            #     break
 
         # Update running reward to check condition for solving
         episode_reward_history.append(episode_reward)
+        episode_rewards_full.append(episode_reward)
+
         if len(episode_reward_history) > 100:
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
+
+        time_values.append(time.time() - t0)
 
         if episode_reward > best_fitness:
             best_fitness = episode_reward
@@ -144,6 +156,10 @@ def main():
         print(f"End of episode {episode_count}. Episode reward: {episode_reward}. Reward mean: {running_reward}. Best "
               f"fitness: {best_fitness}")
 
+        with open(os.path.join("results", "qlearning-stats.dat"), "wb") as fw:
+            pickle.dump([episode_rewards_full, time_values], fw)
+
+
     t1 = time.time()
 
     print("Time elapsed during execution: " + str(t1 - t0))
@@ -152,6 +168,6 @@ def main():
     env.close()
 
 
-main()
+# main()
 
-# play_with_trained_model()
+play_with_trained_model()
