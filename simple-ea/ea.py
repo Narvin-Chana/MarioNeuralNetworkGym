@@ -13,7 +13,7 @@ from deap import base, creator, tools, algorithms
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
 
-from wrappers import wrapper
+from qlearning.wrappers import wrapper
 
 SAVE_INTERVAL = 1
 
