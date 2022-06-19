@@ -20,32 +20,6 @@ MOVEMENT = [['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 
 env = JoypadSpace(env, MOVEMENT)
 
 
-def play_with_trained_model():
-    file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'models/06-10T00-19/EP1100')
-    # Could be used if we already have partially trained the network and save an intermediary best
-    best_model = keras.models.load_model(network_filepath)
-
-    done = False
-    state = env.reset()
-    state = np.transpose(state, (1, 2, 0))
-    total_reward = 0
-    while True:
-        env.render()
-        if done:
-            env.reset()
-
-        action_probs = best_model(tf.expand_dims(state, 0))
-        # Take best action
-        action = tf.argmax(action_probs[0]).numpy()
-
-        state, reward, done, info = env.step(action)
-        state = np.transpose(state, (1, 2, 0))
-        total_reward += reward
-        # print(f"Current total reward: {total_reward}")
-    env.close()
-
-
 def main():
     """
     Main loop for Q-learning
@@ -54,9 +28,9 @@ def main():
     episode_rewards_full = []
 
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'qlearning/models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
+    network_filepath = os.path.join(file_dir, 'models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
     os.makedirs(network_filepath)
-    os.makedirs(os.path.join(file_dir, 'qlearning/results'), exist_ok=True)
+    os.makedirs(os.path.join(file_dir, 'results'), exist_ok=True)
     n_actions = len(MOVEMENT)
     batch_size = 32  # Size of batch taken from replay buffer
 
@@ -159,5 +133,3 @@ def main():
 
 
 main()
-
-# play_with_trained_model()
