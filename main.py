@@ -100,6 +100,7 @@ def main():
         state = env.reset()
         state = np.transpose(state, (1, 2, 0))
         episode_reward = 0
+        nb_iter = 1
 
         for timestep in range(1, max_steps_per_episode):
             frame_count += 1
@@ -133,12 +134,14 @@ def main():
             if len(agent.memory) > max_memory_length:
                 agent.handle_mem()
 
-            # if done or info['flag_get']:
-            #     break
+            if done or info['flag_get']:
+                state = env.reset()
+                state = np.transpose(state, (1, 2, 0))
+                nb_iter += 1
 
         # Update running reward to check condition for solving
-        episode_reward_history.append(episode_reward)
-        episode_rewards_full.append(episode_reward)
+        episode_reward_history.append(episode_reward / nb_iter)
+        episode_rewards_full.append(episode_reward / nb_iter)
 
         if len(episode_reward_history) > 100:
             del episode_reward_history[:1]
@@ -148,12 +151,10 @@ def main():
 
         if episode_reward > best_fitness:
             best_fitness = episode_reward
-            agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0,
-                                  is_best=True)
         if episode_count % save_after_episodes == 0:
-            agent.save_checkpoint(network_filepath, episode_count, episode_reward, running_reward, best_fitness, t0)
+            agent.save_checkpoint(network_filepath, episode_count, episode_reward / nb_iter, running_reward, best_fitness, t0)
 
-        print(f"End of episode {episode_count}. Episode reward: {episode_reward}. Reward mean: {running_reward}. Best "
+        print(f"End of episode {episode_count}. Episode reward: {episode_reward / nb_iter}. Reward total of episode: {episode_reward}. Num_iter: {nb_iter}. Reward mean: {running_reward}. Best "
               f"fitness: {best_fitness}")
 
         with open(os.path.join("results", "qlearning-stats.dat"), "wb") as fw:
@@ -168,6 +169,6 @@ def main():
     env.close()
 
 
-# main()
+main()
 
-play_with_trained_model()
+# play_with_trained_model()
