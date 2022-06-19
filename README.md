@@ -13,4 +13,4 @@ To see a playback of the models (only q-learning and the CEA are available):
 - run cea-playback.py for the CEA
 - for q-learning, run q-learning-playback.py, but make sure to change the path to the model you want to see the playback from.
 
-Lastly, all plots-\$algorithm\$.py files can be used to generate the plots
+Lastly, all plots-$algorithm$.py files can be used to generate the plots
