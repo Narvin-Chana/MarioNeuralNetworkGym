@@ -54,9 +54,9 @@ def main():
     episode_rewards_full = []
 
     file_dir = os.getcwd()
-    network_filepath = os.path.join(file_dir, 'Q-learning/models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
+    network_filepath = os.path.join(file_dir, 'qlearning/models', datetime.datetime.now().strftime("%m-%dT%H-%M"))
     os.makedirs(network_filepath)
-    os.makedirs(os.path.join(file_dir, 'Q-learning/results'), exist_ok=True)
+    os.makedirs(os.path.join(file_dir, 'qlearning/results'), exist_ok=True)
     n_actions = len(MOVEMENT)
     batch_size = 32  # Size of batch taken from replay buffer
 

@@ -4,7 +4,7 @@ import gym_super_mario_bros
 from deap import base, creator
 from nes_py.wrappers import JoypadSpace
 
-from wrappers import wrapper
+from qlearning.wrappers import wrapper
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMax)
